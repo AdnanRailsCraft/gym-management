@@ -163,7 +163,7 @@ Scheduled work (expiry reminders, backup reminders, scheduled backups) must run 
 
 ### 4.2 Data location
 
-- Store the database, uploaded files, logs, and backups in a separate writable directory such as `%LOCALAPPDATA%\GymManagementSystem` (single-user) or `%PROGRAMDATA%\GymManagementSystem` (per-machine), chosen according to the deployment model.
+- Store the database, uploaded files, logs, and backups in a separate writable directory outside the install folder. The v1 deployment model is per-machine: `%PROGRAMDATA%\GymManagementSystem` (see section 33).
 - Never keep the only copy of data inside the program installation directory or any directory an upgrade or uninstaller routinely deletes.
 
 ### 4.3 Updates
@@ -1032,7 +1032,7 @@ Keep the Rails app maintainable and the desktop packaging code isolated.
 
 ---
 
-## 33. Decisions to confirm before implementation
+## 33. Decisions confirmed before implementation
 
 This specification assumes:
 
@@ -1044,13 +1044,31 @@ This specification assumes:
 - Rails is preferred, subject to the Phase 0 prototype; SQLite is the single-PC database.
 - Optional modules (workouts, classes, equipment, payroll) are decided before Phase 1.
 
-**Open decisions:**
+Resolved 2026-10-11 (council review + owner approval):
 
-1. Will more than one PC ever need the same live data? If yes, decide now (section 2.4).
-2. Which optional modules ship in version 1?
-3. Per-user (`%LOCALAPPDATA%`) or per-machine (`%PROGRAMDATA%`) data location?
-4. Which approval thresholds apply to refunds, discounts, and expenses?
-5. Is a code-signing certificate available?
+| # | Decision | Outcome |
+|---|---|---|
+| 1 | Will more than one PC ever need the same live data? | **No for v1.** Single-PC only; not a permanent architectural commitment. Data stays one portable SQLite file so a future sync story remains possible. |
+| 2 | Which optional modules ship in version 1? | **None.** Workouts, classes, equipment, payroll deferred. Keep clean module seams (namespaces, grouped migrations) so later modules need no rearchitecture. |
+| 3 | Per-user or per-machine data location? | **Per-machine: `%PROGRAMDATA%\GymManagementSystem`.** Shared front-desk PCs and account switching make per-user storage a data-loss risk. Installer elevates once; app runtime does not. |
+| 4 | Which approval thresholds apply to refunds, discounts, and expenses? | **Structure only for v1:** Manager within limit, Owner above limit. Exact amounts are a **Phase 1 blocker: TBD**. Schema ships `threshold_cents` config rows from the first migration; amounts are data, never hardcoded role booleans. |
+| 5 | Is a code-signing certificate available? | **No for v1.** Document the SmartScreen first-run path ("More info → Run anyway"); publish the SHA-256 checksum. Never advise disabling Windows security features. |
+| 6 | DESIGN defaults (dates, receipts, overpayment, grace)? | **Confirmed:** inclusive end dates (a plan ending Dec 31 is valid through end of Dec 31), receipt format `RC-YYYY-NNNNNN`, no overpayment accepted, 0-day grace. Encoded as acceptance tests before feature code. |
+| 7 | Phase 0 verification loop? | **GitHub Actions `windows-latest` is the primary loop** (agent writes scripts, CI runs them on real Windows, agent reads logs directly). Owner's Windows PC is final acceptance smoke only. All checks emit machine-readable PASS/FAIL (exit codes + JSON log); raw output pasted, never prose summaries. |
+| 8 | Toolchain pin? | **Ruby 3.4.10, Rails 8.1.3.1** (`.ruby-version` + `Gemfile.lock`). No silent changes. |
+| 9 | Version control? | **git, from Phase 0.** Builds only from tags. |
+| 10 | Duplicate spec file? | **REQUIREMENTS.md is the single source of truth.** Duplicate deleted. |
+
+### 33.1 Constraints added for packaging (Phase 0 gates)
+
+- **Installer tool:** Inno Setup (build runs on the Windows CI runner).
+- **Self-contained Ruby:** the installer bundles a portable Windows Ruby runtime matching `.ruby-version`; the target machine never needs Ruby installed.
+- **Minimum OS:** Windows 10 22H2 x64 or later.
+- **Uninstall preserves data by default**; explicit "delete data" is a separate opt-in choice.
+- **Upgrade path:** tagged releases only; upgrading in place must preserve data and run pending migrations after an automatic pre-migration backup.
+- **Backups:** automated backup location documented in BACKUP_RESTORE.md; a restore drill (restore backup onto a clean install) is a release acceptance test.
+- **SQLite:** WAL mode enabled; single-writer assumption documented (front-desk single-PC usage); foreign keys enforced.
+- **Verification honesty:** no item is "done" until its CI log or Windows smoke output exists in the phase report.
 
 ---
 

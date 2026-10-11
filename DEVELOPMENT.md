@@ -82,7 +82,7 @@ Report results honestly, including failures and skipped tests.
 
 ## 6. Local data during development
 
-Development and test use separate databases. Packaged builds use `%LOCALAPPDATA%\GymManagementSystem`. Never point a development run at a real gym's data directory.
+Development and test use separate databases. Packaged builds use `%PROGRAMDATA%\GymManagementSystem`. Never point a development run at a real gym's data directory.
 
 ## 7. Git workflow
 
@@ -93,7 +93,7 @@ Development and test use separate databases. Packaged builds use `%LOCALAPPDATA%
 ## 8. Debugging and logs
 
 - Development logs: `log/development.log`.
-- Packaged logs: `%LOCALAPPDATA%\GymManagementSystem\logs` (rotated; no passwords or tokens).
+- Packaged logs: `%PROGRAMDATA%\GymManagementSystem\logs` (rotated; no passwords or tokens).
 - The diagnostics page shows version, database status, disk space, last backup, and can recompute ledger balances to detect inconsistencies.
 
 ## 9. Definition of done for a change

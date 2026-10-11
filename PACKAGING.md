@@ -59,7 +59,7 @@ All must be demonstrated on a **clean Windows VM and a real Windows laptop**, wi
 - [ ] Installer runs; shortcuts created; app opens in its own window.
 - [ ] Rails binds to `127.0.0.1` only; a free port is chosen automatically; no inbound firewall rule is created.
 - [ ] Single-instance lock works; a second launch focuses the first.
-- [ ] Data is written to `%LOCALAPPDATA%\GymManagementSystem`, not the install folder.
+- [ ] Data is written to `%PROGRAMDATA%\GymManagementSystem`, not the install folder.
 - [ ] SQLite persists across restarts; WAL mode and foreign keys are active.
 - [ ] A sample migration runs on upgrade, with an automatic pre-migration backup.
 - [ ] Closing the window stops Rails; no orphan processes after exit or after a forced kill and relaunch.

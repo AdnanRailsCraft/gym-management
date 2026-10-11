@@ -9,7 +9,7 @@ You need:
 - A Windows 10 or 11 **64-bit** PC or laptop.
 - The installer file, for example `GymManagementSystem-Setup-1.0.0.exe`.
 - About *(to be measured)* of free disk space.
-- Permission to install software, only if you choose an all-users install.
+- Permission to install software (administrator rights are needed once, for the all-users install).
 
 You do **not** need internet access, Ruby, Node.js, a database server, or a web browser.
 
@@ -27,7 +27,7 @@ Get-FileHash .\GymManagementSystem-Setup-1.0.0.exe -Algorithm SHA256
 4. Choose whether to create a desktop shortcut.
 5. Click **Install**, then **Finish**. Leave "Launch Gym Management System" ticked.
 
-By default the app installs for your Windows user and does not need administrator rights *(confirm)*.
+By default the app installs **for all users** (per-machine) and needs administrator rights once at install time. The running app itself never needs elevation.
 
 ## 3. First launch and setup
 
@@ -45,8 +45,8 @@ The first start shows a setup wizard:
 
 | Item | Location |
 |---|---|
-| Program files | `%LOCALAPPDATA%\Programs\GymManagementSystem` *(confirm)* |
-| Data (database, uploads, logs) | `%LOCALAPPDATA%\GymManagementSystem` |
+| Program files | `%ProgramFiles%\GymManagementSystem` |
+| Data (database, uploads, logs) | `%PROGRAMDATA%\GymManagementSystem` |
 | Backups | The folder you chose in setup |
 
 Your data is kept **separate** from the program so upgrades and uninstalls do not erase it.
@@ -74,7 +74,7 @@ Upgrading never deletes your data. If an update fails, the app will not open you
 
 | Problem | What to try |
 |---|---|
-| The app window does not open | Wait up to a minute on first launch; then reopen. Use Help → Export support report, or open the logs folder (`%LOCALAPPDATA%\GymManagementSystem\logs`) |
+| The app window does not open | Wait up to a minute on first launch; then reopen. Use Help → Export support report, or open the logs folder (`%PROGRAMDATA%\GymManagementSystem\logs`) |
 | "Another copy is already running" | Look for the app in the taskbar or system tray; if none, restart the PC |
 | SmartScreen warning | Expected for unsigned builds; verify the checksum (section 1) |
 | "Port in use" | The app picks a free port automatically; if the error persists, restart the PC and send the support report |

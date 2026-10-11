@@ -77,9 +77,9 @@ Do not edit database files by hand.
 
 | Item | Default location |
 |---|---|
-| Live data | `%LOCALAPPDATA%\GymManagementSystem` |
+| Live data | `%PROGRAMDATA%\GymManagementSystem` |
 | Backups | The folder chosen in setup (Settings → Backup) |
-| Logs | `%LOCALAPPDATA%\GymManagementSystem\logs` |
+| Logs | `%PROGRAMDATA%\GymManagementSystem\logs` |
 
 ## 8. Acceptance test (developers and testers)
 

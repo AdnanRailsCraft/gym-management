@@ -218,7 +218,7 @@ A left list of reports and a right pane with date range and filters, a table, an
 │              │                                              │
 │              ▼                                              │
 │  SQLite (WAL)   uploads/   logs/   backups/                 │
-│  in %LOCALAPPDATA%\GymManagementSystem\  (outside install)  │
+│  in %PROGRAMDATA%\GymManagementSystem\  (outside install)     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -332,24 +332,26 @@ Startup follows REQUIREMENTS section 3. On an upgrade the new version detects a 
 ## B13. File layout on disk
 
 ```text
-%LOCALAPPDATA%\GymManagementSystem\
+%PROGRAMDATA%\GymManagementSystem\
 ├── db\gms.sqlite3 (+ -wal, -shm)
 ├── uploads\
 ├── backups\
 ├── logs\
 └── config\settings.json   (no secrets in plain text)
 
-C:\Users\<user>\AppData\Local\Programs\GymManagementSystem\   (program files; safe to replace)
+%ProgramFiles%\GymManagementSystem\   (program files; safe to replace)
 ```
 
-## B14. Decisions to confirm
+## B14. Decisions confirmed
 
-| # | Decision | Proposed default |
+All confirmed 2026-10-11 (see REQUIREMENTS section 33 for the full record).
+
+| # | Decision | Outcome |
 |---|---|---|
-| 1 | Inclusive end dates | Yes |
+| 1 | Inclusive end dates | Yes — a plan ending Dec 31 is valid through end of Dec 31 |
 | 2 | Receipt number format | `RC-YYYY-NNNNNN` |
-| 3 | Data location | `%LOCALAPPDATA%` (per user) |
+| 3 | Data location | `%PROGRAMDATA%\GymManagementSystem` (per machine) |
 | 4 | Accent color | `#1F5FBF` |
 | 5 | Overpayment | Not allowed |
 | 6 | Grace period after expiry | Per plan, default 0 days |
-| 7 | Refund approval above a threshold | Manager/Owner; amount to be set |
+| 7 | Refund approval above a threshold | Manager/Owner; exact amounts are a Phase 1 blocker (TBD), stored as `threshold_cents` config rows |
