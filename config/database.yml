@@ -1,0 +1,35 @@
+# SQLite. Versions 3.8.0 and up are supported.
+#   gem install sqlite3
+#
+#   Ensure the SQLite 3 gem is defined in your Gemfile
+#   gem "sqlite3"
+#
+default: &default
+  adapter: sqlite3
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+
+development:
+  <<: *default
+  database: storage/development.sqlite3
+
+# Warning: The database defined as "test" will be erased and
+# re-generated from your development database when you run "rake".
+# Do not set this db to the same as development or production.
+test:
+  <<: *default
+  database: storage/test.sqlite3
+
+# SQLite3 write its data on the local filesystem, as such it requires
+# persistent disks. If you are deploying to a managed service, you should
+# make sure it provides disk persistence, as many don't.
+#
+# Similarly, if you deploy your application as a Docker container, you must
+# ensure the database is located in a persisted volume.
+production:
+  <<: *default
+  # Desktop app: database lives in the data directory set by the launcher.
+  # This ERB is evaluated for every environment at boot, so it must not raise
+  # here; config/environments/production.rb fail-fasts if GMS_DATA_DIR is
+  # missing before any production connection is ever opened.
+  database: <%= ENV["GMS_DATA_DIR"] ? File.join(ENV["GMS_DATA_DIR"], "db", "gms.sqlite3") : "tmp/gms_data_dir_missing.sqlite3" %>
