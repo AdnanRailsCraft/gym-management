@@ -1,0 +1,53 @@
+# Phase 0 primary verification: Windows runner runs the full check chain.
+# Machine-readable report: dist/results/report.json (uploaded as artifact
+# on every run, pass or fail). Red CI = Phase 0 not proven — no prose claims.
+name: windows-phase0
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ruby (exact pin from .ruby-version)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version-file: .ruby-version
+
+      - name: Toolchain versions (recorded in report context)
+        shell: pwsh
+        run: |
+          ruby -v
+          bundle -v
+          node -v
+          npm -v
+
+      - name: Run Phase 0 check chain
+        shell: pwsh
+        run: ./scripts/windows/run-all.ps1
+
+      - name: Upload machine-readable report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase0-report
+          path: |
+            dist/results/report.json
+            dist/results/checks.jsonl
+          if-no-files-found: warn
+
+      - name: Upload precompiled assets log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase0-failure-context
+          path: |
+            log/*.log
+            tmp/build/*.log
+          if-no-files-found: ignore
