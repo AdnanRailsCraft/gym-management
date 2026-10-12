@@ -31,7 +31,9 @@ Rails.application.configure do
   config.secret_key_base = File.read(secret_file).strip
 
   # Packaged logs live with the data, rotated, outside Program Files.
-  config.log_path = File.join(data_dir, "logs", "production.log")
+  # (config.log_path is not a real Rails setting — set the logger directly.)
+  config.logger = ActiveSupport::Logger.new(File.join(data_dir, "logs", "production.log"), 5, 10 * 1024 * 1024)
+  config.logger.level = ActiveSupport::Logger::INFO
 
   # Code is not reloaded between requests.
   config.enable_reloading = false

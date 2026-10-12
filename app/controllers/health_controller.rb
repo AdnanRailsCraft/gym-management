@@ -11,6 +11,7 @@ class HealthController < ApplicationController
       schema_migrations: connection.select_value("SELECT COUNT(*) FROM schema_migrations").to_i
     }
   rescue StandardError => e
+    Rails.logger.error("health probe failed: #{e.class}: #{e.message}")
     render json: { status: "error", error: e.class.name }, status: :service_unavailable
   end
 end

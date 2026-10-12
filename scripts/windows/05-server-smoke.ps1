@@ -20,6 +20,11 @@ $env:PORT = "$port"
 
 $serverProc = $null
 try {
+    # --- migrate production schema into the data dir (launcher does the same)
+    $migrate = Invoke-Tool -FilePath "bundle" -ArgumentList @("exec", "rails", "db:prepare")
+    Write-Check -Name "production_db_prepare" -Pass ($migrate.ExitCode -eq 0) `
+        -Detail ($migrate.Output.Trim() -split "`n" | Select-Object -Last 1)
+
     # --- start: ruby bin/rails server (puma binds 127.0.0.1:$PORT via config/puma.rb)
     $rubyExe = (Get-Command ruby).Source
     $serverProc = Start-Process -FilePath $rubyExe `
@@ -88,8 +93,9 @@ finally {
     # --- production data dir layout -----------------------------------------
     $dbOk = Test-Path (Join-Path $dataDir "db\gms.sqlite3")
     $secretOk = Test-Path (Join-Path $dataDir "config\secret_key_base")
-    Write-Check -Name "data_dir_layout_created" -Pass ($dbOk -and $secretOk) `
-        -Detail "db=$dbOk secret=$secretOk"
+    $logOk = Test-Path (Join-Path $dataDir "logs\production.log")
+    Write-Check -Name "data_dir_layout_created" -Pass ($dbOk -and $secretOk -and $logOk) `
+        -Detail "db=$dbOk secret=$secretOk log=$logOk"
 
     Remove-Item -Recurse -Force $dataDir -ErrorAction SilentlyContinue
     $env:RAILS_ENV = ""
