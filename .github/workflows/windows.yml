@@ -34,7 +34,7 @@ jobs:
 
       - name: Upload machine-readable report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: phase0-report
           path: |
@@ -44,7 +44,7 @@ jobs:
 
       - name: Upload precompiled assets log on failure
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: phase0-failure-context
           path: |
@@ -82,7 +82,7 @@ jobs:
           Write-Host "exe ok: $exe ($size bytes)"
 
       - name: Upload shell binary
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: gym-desktop-exe
           path: desktop/src-tauri/target/release/gym-desktop.exe
@@ -107,7 +107,7 @@ jobs:
           bundle --version
 
       - name: Download shell binary
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: gym-desktop-exe
           path: desktop/src-tauri/target/release
@@ -121,7 +121,7 @@ jobs:
 
       - name: Upload installer artifact
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: phase0-installer
           path: |
