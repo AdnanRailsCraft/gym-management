@@ -1,6 +1,6 @@
 # Packaging Guide — Building the Windows Installer
 
-> **Status:** this is the plan for the Phase 0 prototype. **No packaging approach has been proven yet.** Treat every method below as a *candidate to evaluate*, and do not describe the installer as self-contained until it passes the clean-machine tests in the [Release Checklist](RELEASE_CHECKLIST.md).
+> **Status:** Phase 0 prototype built and CI-proven (see §10). Installer is unsigned; owner clean-machine smoke checklist (§10.3) must pass before Phase 1. Do not describe the installer as fully self-contained until that smoke plus the remaining §5 criteria pass.
 
 ## 1. Goal
 
@@ -94,10 +94,84 @@ A valid code-signing certificate reduces (but may not immediately eliminate) Sma
 
 Semantic versioning (`MAJOR.MINOR.PATCH`). The version appears in the installer filename, Help → About, diagnostics, backups' manifests, and `CHANGELOG.md`. A database schema version is tracked separately and checked at startup.
 
-## 10. Prototype findings log
+## 10. Prototype findings log / Phase 0 report
 
-Record results here as Phase 0 progresses.
+**Status:** Phase 0 implementation complete; CI proven on `windows-latest`; owner clean-machine smoke pending (checklist below). **Gate: do not start Phase 1 until the owner reports the smoke checklist passed.**
+
+### 10.1 What was chosen (council verdict + implementation)
+
+| Area | Choice | Where |
+|---|---|---|
+| Shell | Tauri 2 (single WebView2 window owns Rails lifecycle) | `desktop/` |
+| Data dir | `%PROGRAMDATA%\GymManagementSystem` (per-machine, installer elevates once; runtime never elevates) | shell `main.rs`, `config/environments/production.rb` |
+| Installer | Inno Setup 6 (`x64compatible`, `{autopf}`) | `installer/gym-management.iss` |
+| Build/verify | GitHub Actions `windows-latest` (owner smoke secondary) | `.github/workflows/windows.yml` |
+| Pins | Ruby 3.4.10 (`.ruby-version` + CI hardcoded), Rails 8.1.3.1, Tauri CLI ^2.9 | Gemfile, workflow, `desktop/package.json` |
+| Min OS | Windows 10 22H2 x64 (WebView2, x64 Ruby) | §33 |
+| Money | Integer minor units, ledger; immutable payments + audited reversals | not yet implemented (Phase 1+) |
+
+### 10.2 CI evidence (run `38217510947`, branch `main`, commit `e8945f0`)
+
+| Job | Result | Evidence |
+|---|---|---|
+| `windows` | pass, 3m45s | 17/17 checks green (`phase0-report` artifact): ruby pin, frozen bundle + sqlite3 native load, assets:precompile, 6 tests / 15 assertions / 0 failures, prod server boots on free loopback port, `/up` 200, `/` JSON `wal`+`fk`+`schema_migrations:1`, listener only on `127.0.0.1`, no firewall rules, clean stop, no orphans, port closed, data-dir layout incl. `logs/production.log` |
+| `desktop-shell` | pass, ~5m | release `gym-desktop.exe` built from `desktop/src-tauri`, asserted ≥1MB, uploaded (`gym-desktop-exe` artifact, 2.37MB) |
+| `installer` | pass, 5m46s | 16/16 checks green: robocopy portable Ruby from `RbConfig::TOPDIR`, app code + portable `vendor/bundle` (deployment mode), desktop exe staged, layout contract complete, ISCC found, compile success, setup exe ≥5MB |
+
+Installer artifact: `GymManagementSystem-Setup-0.1.0.exe`, ~46MB (`phase0-installer` artifact).
+
+### 10.3 Owner GUI smoke checklist (clean Windows 10/11 x64 machine, no dev tools)
+
+Run on a real machine; report PASS/FAIL per line:
+
+1. [ ] Download `GymManagementSystem-Setup-0.1.0.exe` from the `phase0-installer` artifact; verify SHA-256 against the published checksum.
+2. [ ] Double-click installer: UAC prompt once; installs under `C:\Program Files\Gym Management System`; Start Menu + optional desktop shortcut appear.
+3. [ ] Launch app: one window opens showing the gym UI (window navigated to `http://127.0.0.1:<free port>/`); no browser opens.
+4. [ ] `%PROGRAMDATA%\GymManagementSystem` contains `db/gms.sqlite3`, `logs/production.log`, `logs/launcher.log`, secret key file.
+5. [ ] `netstat -ano | findstr LISTENING` shows the Rails port bound to `127.0.0.1` only (never `0.0.0.0`); Windows Firewall shows no new inbound rule.
+6. [ ] Launch a second instance: no second Rails starts; first window is focused.
+7. [ ] Close the window: `ruby.exe` / `puma` processes are gone (no orphans in Task Manager).
+8. [ ] Relaunch: data persists (create a dummy row in Rails console or wait for Phase 1 UI); startup works with networking disabled (airplane mode).
+9. [ ] Kill the app via Task Manager → Relaunch: Rails restarts cleanly, data intact.
+10. [ ] Uninstall via Settings → Apps: binaries removed; `%PROGRAMDATA%\GymManagementSystem` **still present** (data preserved by default).
+11. [ ] Install into a path with spaces (default already has one); still boots.
+12. [ ] Record: installer size (~46MB), install time, first-launch time, second-launch time.
+
+Phase 0 exit-criteria items **not yet applicable** (deferred, no feature exists yet): sample migration on upgrade with pre-migration backup; v0.0.1→v0.0.2 upgrade; explicit "delete data?" uninstall prompt. These become Phase 1+ acceptance tests.
+
+### 10.4 Unverified / known gaps (honesty list)
+
+- **.ps1 scripts never executed on a local Windows box by the author** — all proof is CI (`windows-latest`); local Linux host lacks pwsh/Windows. Scripts are PS 5.1 + pwsh compatible by construction only.
+- **Tauri window navigation to loopback URL** verified only to the extent that the shell builds and the health poll logic is sound; the actual WebView2 navigation behavior needs owner GUI smoke (step 3).
+- **Ruby runtime staged wholesale** from `RbConfig::TOPDIR` (includes headers/docs); no size slimming yet. Expected later phase: trim to runtime-only files.
+- **Unsigned installer**: SmartScreen will warn. Publish SHA-256; never advise disabling security features (§7).
+- **Upgrade path** (detect running instance, data-preserving upgrade) not implemented.
+- Node20 deprecation annotation from `actions/upload-artifact@v5` is warning-only; not investigated.
+- `frontendDist` points at committed `desktop/dist-web-src` (static HTML); no frontend build step exists yet by design.
+
+### 10.5 Findings / deviations from original plan
+
+| Date | Finding | Action |
+|---|---|---|
+| 2026-10-12 | `rails server` defaults to binding `0.0.0.0` outside development | Pinned `ENV["BINDING"] ||= "127.0.0.1"` in `config/boot.rb`; puma.rb also pins `127.0.0.1` |
+| 2026-10-12 | `config.log_path` is not a real Rails setting (silent no-op) | Production logs written via `ActiveSupport::Logger` into `%PROGRAMDATA%\...\logs\production.log` |
+| 2026-10-12 | Zero migrations ⇒ `db:prepare` creates empty DB, no `schema_migrations` table ⇒ 503 on `/` | Added baseline migration + `db/schema.rb`; `05-server-smoke` asserts `production_db_prepare` |
+| 2026-10-12 | `Gemfile.lock` lacked `x64-mingw-ucrt` platform ⇒ Windows bundle fail | `bundle lock --add-platform x64-mingw-ucrt` |
+| 2026-10-12 | `ruby/setup-ruby` rejects `ruby-version-file` for this usage | Hardcoded `ruby-version: '3.4.10'` in workflow; 01-deps checks drift vs `.ruby-version` |
+| 2026-10-12 | `dangerousUseHttpScheme` not in Tauri 2 config schema | Removed; loopback `http://` external URL works without it |
+| 2026-10-12 | `tauri-build` requires `icons/icon.ico` on Windows even with `bundle.active: false` | Committed placeholder 32×32 ICO (replace before real release) |
+| 2026-10-12 | `WebviewUrl` has no `FromStr` in Tauri 2; `AppHandle` move/borrow errors in `run_on_main_thread` closures | `url` crate + `WebviewUrl::External(Url)`; `post_main` helper clones handle |
+| 2026-10-12 | PowerShell scripts share one `checks.jsonl`; baseline captured at dot-source so each script exits on its own failures only | `lib.ps1` `$script:GmsBaselineFailures` pattern |
+| 2026-10-12 | Setup exe filename aligned with §1 goal: `GymManagementSystem-Setup-0.1.0.exe` | `.iss` + `04-installer.ps1` assert + CI artifact glob |
+
+### 10.6 Decision
+
+Phase 0 pipeline (dev box → CI → installer artifact) is proven end-to-end on Windows CI. Remaining risk is concentrated in the **owner GUI smoke** (§10.3) which requires a real Windows machine and human eyes. **Phase 1 must not start until that smoke passes**; if a smoke item fails, fix in Phase 0 and re-run CI before any feature work.
+
+---
+
+Record additional results here as Phase 0 progresses.
 
 | Date | Approach | Result | Blockers / notes |
 |---|---|---|---|
-| | | | |
+| 2026-10-12 | Tauri 2 + Inno 6 + RubyInstaller portable + GitHub Actions windows-latest | CI green (all 3 jobs); installer artifact ~46MB | Owner smoke pending; see §10.3 |

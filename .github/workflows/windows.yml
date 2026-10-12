@@ -125,6 +125,6 @@ jobs:
         with:
           name: phase0-installer
           path: |
-            dist/GymManagementSystemSetup.exe
+            dist/GymManagementSystem-Setup-*.exe
             dist/results/report.json
           if-no-files-found: error

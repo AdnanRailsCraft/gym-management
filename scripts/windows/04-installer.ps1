@@ -1,5 +1,5 @@
 # 04-installer.ps1 — compile installer\gym-management.iss with Inno Setup.
-# Finds ISCC.exe; installs via Chocolatey if absent. Output: dist\GymManagementSystemSetup.exe
+# Finds ISCC.exe; installs via Chocolatey if absent. Output: dist\GymManagementSystem-Setup-<version>.exe
 param(
     [string]$StageRoot = "",
     [string]$OutputDir = "",
@@ -59,7 +59,7 @@ $isccArgs = @(
 $build = Invoke-Tool -FilePath $iscc -ArgumentList $isccArgs
 Write-Check "isscc_compile" ($build.ExitCode -eq 0) (($build.Output.Trim() -split "`n" | Select-Object -Last 2) -join " | ")
 
-$setupExe = Join-Path $OutputDir "GymManagementSystemSetup.exe"
+$setupExe = Join-Path $OutputDir "GymManagementSystem-Setup-0.1.0.exe"
 $setupOk = Test-Path $setupExe
 $setupSize = if ($setupOk) { (Get-Item $setupExe).Length } else { 0 }
 Write-Check "setup_exe_created" ($setupOk -and $setupSize -gt 5MB) ("size=$setupSize path=$setupExe")
