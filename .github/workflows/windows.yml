@@ -13,12 +13,12 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Ruby (exact pin from .ruby-version)
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version-file: .ruby-version
+          ruby-version: '3.4.10'
 
       - name: Toolchain versions (recorded in report context)
         shell: pwsh
@@ -34,7 +34,7 @@ jobs:
 
       - name: Upload machine-readable report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: phase0-report
           path: |
@@ -44,7 +44,7 @@ jobs:
 
       - name: Upload precompiled assets log on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: phase0-failure-context
           path: |

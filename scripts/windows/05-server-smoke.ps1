@@ -72,12 +72,11 @@ finally {
     if ($serverProc -and -not $serverProc.HasExited) {
         Stop-Process -Id $serverProc.Id -Force -ErrorAction SilentlyContinue
     }
-    $portClosed = $true
+    $portClosed = $false
     for ($i = 1; $i -le 15; $i++) {
         $still = @(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue)
-        if ($still.Count -eq 0) { $portClosed = $false; break }
+        if ($still.Count -eq 0) { $portClosed = $true; break }
         Start-Sleep -Seconds 1
-        $portClosed = ($still.Count -eq 0)
     }
     Write-Check -Name "server_stopped_port_closed" -Pass $portClosed -Detail "port=$port"
 
