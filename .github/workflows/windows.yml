@@ -51,3 +51,39 @@ jobs:
             log/*.log
             tmp/build/*.log
           if-no-files-found: ignore
+
+  desktop-shell:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install frontend toolchain
+        working-directory: desktop
+        shell: pwsh
+        run: npm install
+
+      - name: Build Tauri shell (release)
+        working-directory: desktop
+        shell: pwsh
+        run: npm run tauri build
+
+      - name: Assert shell binary
+        shell: pwsh
+        run: |
+          $exe = "desktop/src-tauri/target/release/gym-desktop.exe"
+          if (-not (Test-Path $exe)) { Write-Error "missing $exe"; exit 1 }
+          $size = (Get-Item $exe).Length
+          if ($size -lt 1MB) { Write-Error "suspiciously small: $size bytes"; exit 1 }
+          Write-Host "exe ok: $exe ($size bytes)"
+
+      - name: Upload shell binary
+        uses: actions/upload-artifact@v5
+        with:
+          name: gym-desktop-exe
+          path: desktop/src-tauri/target/release/gym-desktop.exe
+          if-no-files-found: error

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Gym Management System",
+  "version": "0.1.0",
+  "identifier": "com.gymmanagement.desktop",
+  "build": {
+    "frontendDist": "../dist-web-src"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": null,
+      "dangerousUseHttpScheme": true
+    }
+  },
+  "bundle": {
+    "active": false
+  }
+}
