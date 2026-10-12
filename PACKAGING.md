@@ -186,7 +186,64 @@ Phase 0 exit-criteria items **not yet applicable** (deferred, no feature exists 
 
 ### 10.6 Decision
 
-Phase 0 pipeline (dev box → CI → installer artifact) is proven end-to-end on Windows CI. Remaining risk is concentrated in the **owner GUI smoke** (§10.3) which requires a real Windows machine and human eyes. **Phase 1 must not start until that smoke passes**; if a smoke item fails, fix in Phase 0 and re-run CI before any feature work.
+Phase 0 pipeline (dev box → CI → installer artifact) is proven end-to-end on Windows CI. Remaining risk is concentrated in the **owner GUI smoke** (§10.3) run under the **§11 Test Gate** (evidence-per-claim, artifacts required, named owner signs). **Phase 1 must not start until the §11 gate passes**; if a gate item fails, fix in Phase 0 and re-run CI before any feature work.
+
+---
+
+## 11. Phase 0 Test Gate (council-validated)
+
+Council (5 advisors + 5 peer reviewers + chairman, 2026-10-12) verdict: gate = **evidence-per-claim on the actual gym PC**, not check-count. CI proves the code; only the gym PC proves the environment. Single test machine exists — no clone — so order operations to protect data: non-destructive tests first, destructive tests only after an off-machine copy of the data dir exists.
+
+### 11.1 Scope statement (verbatim, must appear in the pass doc)
+
+> Phase 0 = install, run, persist, survive kill, offline, loopback-only, uninstall-keeps-data. Install-only: no upgrade claim — upgrade path deferred to Phase 1. Passing Phase 0 does not mean safe-to-upgrade.
+
+### 11.2 Gate criteria (all seven required)
+
+1. **Install on the gym PC.** Record: Windows build, AV product, username (ASCII or not). Verify installed installer SHA-256 matches the CI artifact checksum (provenance).
+2. **12-item smoke (§10.3), each with an artifact** — screenshot, saved command output, or timestamped log. No artifact = not passed.
+3. **Off-machine data copy** (this is also the ongoing backup): copy `%PROGRAMDATA%\GymManagementSystem` to external drive/cloud before any destructive test.
+4. **Three data-survival tests, in this order, after item 3:**
+   - (a) Create rows → Task Manager kill process tree mid-save → relaunch → every row present, WAL recovered.
+   - (b) Create rows → hard reboot (or pull power) mid-save → relaunch → `PRAGMA integrity_check` clean, rows intact. *(Run via `sqlite3 gms.sqlite3 "PRAGMA integrity_check;"` from an elevated prompt, or via Rails console.)*
+   - (c) Restore from the off-machine copy into a wiped data dir → app boots with data.
+5. **Loud-failure checks:** occupy the loopback port before launch (`netstat`) → visible error window, not blank WebView; interrupt the installer mid-way (kill setup.exe) → no broken hybrid left behind, clean re-install possible.
+6. **One week of real gym usage**, fixed duration, zero data incidents (WAL files present, no corruption messages in `production.log`).
+7. **Named owner signs the "Phase 0 Passed" doc** (date + name). Artifacts retained alongside the doc.
+
+### 11.3 Failure rules (agreed before testing, not after)
+
+- Any gate-criteria failure = **block**. Owner decides fix-now vs. defer-explicitly in writing; default is fix in Phase 0.
+- After any fix: re-run **full** smoke (§10.3) + the three data-survival tests. No partial re-runs.
+- Threshold: all 12 smoke items + all gate criteria must pass. 11/12 is not a pass.
+
+### 11.4 Explicitly out of scope for Phase 0
+
+- Upgrade round-trip (v0.0.1→v0.0.2) — Phase 1.
+- Multi-user, multi-machine, second gym location.
+- SmartScreen polish beyond §7 local trust on this one PC.
+- Cert expiry, Windows Update resetting trust store — document recovery in §7 if hit.
+- Re-verifying CI (already green; trust it until a change lands).
+
+### 11.5 Cheap add recommended for Phase 1 (not a Phase 0 gate item)
+
+Launch-time `PRAGMA integrity_check` with an owner-facing error message — converts silent corruption into a visible error at open. Also: Tauri→Rails handoff failure UX (port conflict / missing Ruby currently risks a blank window; council flagged as worst failure mode for a non-technical owner).
+
+### 11.6 Evidence checklist template
+
+| # | Item | Artifact | Pass/Fail | Date |
+|---|---|---|---|---|
+| 1 | Windows build / AV / username recorded | note file | | |
+| 2 | Installer SHA-256 matches CI | checksum text | | |
+| 3 | Smoke items 1–12 | 12 artifacts | | |
+| 4 | Off-machine data copy exists | copy confirmation | | |
+| 5a | Kill mid-save → rows intact | screenshot + query | | |
+| 5b | Hard reboot → integrity_check clean | sqlite output | | |
+| 5c | Restore from copy → boots with data | screenshot | | |
+| 6 | Port-occupied → loud error | screenshot | | |
+| 7 | Interrupted install → clean re-install | note + second install | | |
+| 8 | One week usage, zero incidents | dated log | | |
+| 9 | Owner signature | pass doc | | |
 
 ---
 
