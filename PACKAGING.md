@@ -82,7 +82,26 @@ If criteria cannot be met within a reasonable effort, document the blockers and 
 
 ## 7. Signing and SmartScreen
 
-A valid code-signing certificate reduces (but may not immediately eliminate) SmartScreen warnings. If unsigned, document the warning, publish the checksum, and never advise disabling Windows security features.
+**Phase 0 decision (single owner-controlled gym PC):** self-signed code-signing cert + one-time local trust import. This removes the SmartScreen block **on that PC only**; the UAC prompt still shows the cert subject (`Gym Management System Local`) instead of "Unknown Publisher". Any other machine still sees the unsigned-app warning — expected while Phase 0 targets one machine.
+
+Owner procedure on the gym PC (never on CI; PFX password stays in your env — `GMS_SIGN_PFX_PASSWORD` — never in git):
+
+```powershell
+# 1. once — create cert (password printed once; persist via setx)
+.\scripts\windows\06-sign.ps1 -CreateCert
+
+# 2. download GymManagementSystem-Setup-0.1.0.exe from the CI artifact, then:
+.\scripts\windows\06-sign.ps1 -Files .\GymManagementSystem-Setup-0.1.0.exe
+
+# 3. once, elevated shell — trust on this PC
+.\scripts\windows\06-sign.ps1 -InstallTrust
+
+# 4. confirm
+Get-AuthenticodeSignature .\GymManagementSystem-Setup-0.1.0.exe | fl Status, StatusMessage
+# expect Status = Valid; double-click → no SmartScreen block
+```
+
+Later phases (multi-machine distribution): replace with Azure Trusted Signing or a paid CA cert; do not ship the self-signed PFX or its trust step to third parties. A valid paid code-signing certificate reduces (but may not immediately eliminate) SmartScreen warnings until reputation builds. If unsigned, document the warning, publish the checksum, and never advise disabling Windows security features.
 
 ## 8. Reproducibility
 
@@ -144,7 +163,7 @@ Phase 0 exit-criteria items **not yet applicable** (deferred, no feature exists 
 - **.ps1 scripts never executed on a local Windows box by the author** — all proof is CI (`windows-latest`); local Linux host lacks pwsh/Windows. Scripts are PS 5.1 + pwsh compatible by construction only.
 - **Tauri window navigation to loopback URL** verified only to the extent that the shell builds and the health poll logic is sound; the actual WebView2 navigation behavior needs owner GUI smoke (step 3).
 - **Ruby runtime staged wholesale** from `RbConfig::TOPDIR` (includes headers/docs); no size slimming yet. Expected later phase: trim to runtime-only files.
-- **Unsigned installer**: SmartScreen will warn. Publish SHA-256; never advise disabling security features (§7).
+- **Installer default is unsigned in CI artifacts**: SmartScreen will warn on any PC that has not run the §7 local-trust procedure. Publish SHA-256; never advise disabling security features (§7). Owner gym PC: run `06-sign.ps1 -CreateCert` → sign → `-InstallTrust` to clear the block on that machine only.
 - **Upgrade path** (detect running instance, data-preserving upgrade) not implemented.
 - Node20 deprecation annotation from `actions/upload-artifact@v5` is warning-only; not investigated.
 - `frontendDist` points at committed `desktop/dist-web-src` (static HTML); no frontend build step exists yet by design.
@@ -163,6 +182,7 @@ Phase 0 exit-criteria items **not yet applicable** (deferred, no feature exists 
 | 2026-10-12 | `WebviewUrl` has no `FromStr` in Tauri 2; `AppHandle` move/borrow errors in `run_on_main_thread` closures | `url` crate + `WebviewUrl::External(Url)`; `post_main` helper clones handle |
 | 2026-10-12 | PowerShell scripts share one `checks.jsonl`; baseline captured at dot-source so each script exits on its own failures only | `lib.ps1` `$script:GmsBaselineFailures` pattern |
 | 2026-10-12 | Setup exe filename aligned with §1 goal: `GymManagementSystem-Setup-0.1.0.exe` | `.iss` + `04-installer.ps1` assert + CI artifact glob |
+| 2026-10-12 | SmartScreen cannot be silenced by code; owner has one controlled gym PC | Self-signed cert + LocalMachine\Root trust (`06-sign.ps1`, §7). Multi-machine → Azure Trusted Signing/CA cert in a later phase. PFX never committed |
 
 ### 10.6 Decision
 
