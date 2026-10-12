@@ -11,7 +11,7 @@
 
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
@@ -122,9 +122,9 @@ fn wait_healthy(port: u16, attempts: u32) -> bool {
 }
 
 fn open_main_window(app: &AppHandle, port: u16) {
-    let url: WebviewUrl = format!("http://127.0.0.1:{port}/")
-        .parse()
-        .expect("loopback url parses");
+    let url = WebviewUrl::External(
+        url::Url::parse(&format!("http://127.0.0.1:{port}/")).expect("loopback url parses"),
+    );
     let _ = WebviewWindowBuilder::new(app, "main", url)
         .title("Gym Management System")
         .inner_size(1280.0, 800.0)
@@ -145,6 +145,11 @@ fn open_error_window(app: &AppHandle, msg: &str) {
     }
 }
 
+fn post_main(app: &AppHandle, f: impl FnOnce(&AppHandle) + Send + 'static) {
+    let a = app.clone();
+    let _ = app.run_on_main_thread(move || f(&a));
+}
+
 fn boot_sequence(app: AppHandle) {
     log_line(&format!(
         "boot start exe_dir={:?} data_dir={:?}",
@@ -154,13 +159,13 @@ fn boot_sequence(app: AppHandle) {
     if !ruby_path().exists() {
         let msg = format!("runtime not found at {:?}", ruby_path());
         log_line(&msg);
-        let _ = app.run_on_main_thread(move || open_error_window(&app, &msg));
+        post_main(&app, move |a| open_error_window(a, &msg));
         return;
     }
     if let Err(e) = run_db_prepare() {
         let msg = format!("db:prepare failed: {e}");
         log_line(&msg);
-        let _ = app.run_on_main_thread(move || open_error_window(&app, &msg));
+        post_main(&app, move |a| open_error_window(a, &msg));
         return;
     }
     let port = free_loopback_port();
@@ -172,22 +177,23 @@ fn boot_sequence(app: AppHandle) {
         Err(e) => {
             let msg = format!("failed to spawn server: {e}");
             log_line(&msg);
-            let _ = app.run_on_main_thread(move || open_error_window(&app, &msg));
+            post_main(&app, move |a| open_error_window(a, &msg));
             return;
         }
     }
     if wait_healthy(port, 120) {
         log_line("healthy; opening main window");
-        let _ = app.run_on_main_thread(move || open_main_window(&app, port));
+        post_main(&app, move |a| open_main_window(a, port));
     } else {
         let msg = format!("server did not become healthy on port {port}");
         log_line(&msg);
-        let _ = app.run_on_main_thread(move || open_error_window(&app, &msg));
+        post_main(&app, move |a| open_error_window(a, &msg));
     }
 }
 
 fn kill_rails(app: &AppHandle) {
-    let mut guard = app.state::<RailsState>().0.lock().unwrap();
+    let state = app.state::<RailsState>();
+    let mut guard = state.0.lock().unwrap();
     if let Some(mut child) = guard.take() {
         // Kill the whole tree: puma may have grandchildren on Windows.
         let _ = Command::new("taskkill")
