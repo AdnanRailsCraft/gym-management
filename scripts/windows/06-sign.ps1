@@ -13,24 +13,21 @@
 param(
     [switch]$CreateCert,
     [switch]$InstallTrust,
-    [string[]]$Files = @(),
-    [string]$PfxPath = "",
-    [string]$CerPath = "",
-    [string]$CertDir = ""
+    [string[]]$Files = @()
 )
 
 . (Join-Path $PSScriptRoot "lib.ps1")
 Set-Location (Join-Path $PSScriptRoot "..\..")
 
-if ([string]::IsNullOrEmpty($CertDir)) { $CertDir = Join-Path (Get-Location) "dist\signing" }
-if ([string]::IsNullOrEmpty($PfxPath)) { $PfxPath = Join-Path $CertDir "gms-local-signing.pfx" }
-if ([string]::IsNullOrEmpty($CerPath)) { $CerPath = Join-Path $CertDir "gms-local-signing.cer" }
+$signingDir = Join-Path (Get-Location) "dist\signing"
+$PfxPath = Join-Path $signingDir "gms-local-signing.pfx"
+$CerPath = Join-Path $signingDir "gms-local-signing.cer"
 
 $subject = "CN=Gym Management System Local"
 
 # --- create cert ----------------------------------------------------------
 if ($CreateCert) {
-    New-Item -ItemType Directory -Force -Path $CertDir | Out-Null
+    New-Item -ItemType Directory -Force -Path $signingDir | Out-Null
 
     $existing = Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -eq $subject -and $_.NotAfter -gt (Get-Date).AddDays(30) }
     if ($existing) {

@@ -66,7 +66,7 @@ fn app_dir() -> PathBuf {
     exe_dir().join("app")
 }
 
-fn run_logged(cmd: &mut Command) -> std::io::Result<std::process::ExitStatus> {
+fn run_db_prepare() -> std::io::Result<()> {
     let logs = data_dir().join("logs");
     let _ = std::fs::create_dir_all(&logs);
     let out = OpenOptions::new()
@@ -74,18 +74,15 @@ fn run_logged(cmd: &mut Command) -> std::io::Result<std::process::ExitStatus> {
         .append(true)
         .open(logs.join("launcher.log"))?;
     let err = out.try_clone()?;
-    cmd.stdout(Stdio::from(out)).stderr(Stdio::from(err)).status()
-}
-
-fn run_db_prepare() -> std::io::Result<()> {
-    let status = run_logged(
-        Command::new(ruby_path())
-            .arg("bin/rails")
-            .arg("db:prepare")
-            .current_dir(app_dir())
-            .env("RAILS_ENV", "production")
-            .env("GMS_DATA_DIR", data_dir()),
-    )?;
+    let status = Command::new(ruby_path())
+        .arg("bin/rails")
+        .arg("db:prepare")
+        .current_dir(app_dir())
+        .env("RAILS_ENV", "production")
+        .env("GMS_DATA_DIR", data_dir())
+        .stdout(Stdio::from(out))
+        .stderr(Stdio::from(err))
+        .status()?;
     if status.success() {
         Ok(())
     } else {

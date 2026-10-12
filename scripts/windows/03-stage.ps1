@@ -38,7 +38,7 @@ Write-Check "ruby_runtime_entry" (Test-Path (Join-Path $rubyDest "bin\ruby.exe")
 # --- app code -------------------------------------------------------------
 $appDest = Join-Path $StageRoot "app"
 $exclusions = @(".git", "desktop", "dist", "tmp", "log", "scripts", "installer", ".github", "node_modules", "vendor", "coverage", ".bundle")
-$rcArgs = @((Get-Location).Path, $appDest, "/MIR", "/XD", "*tmp*", "/NFL", "/NDL", "/NJH", "/NJS", "/R:1", "/W:1")
+$rcArgs = @((Get-Location).Path, $appDest, "/MIR", "/NFL", "/NDL", "/NJH", "/NJS", "/R:1", "/W:1")
 foreach ($xd in $exclusions) { $rcArgs += @("/XD", $xd) }
 robocopy @rcArgs | Out-Null
 $codeCopyOk = $LASTEXITCODE -lt 8
