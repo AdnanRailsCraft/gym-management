@@ -150,7 +150,7 @@ Run on a real machine; report PASS/FAIL per line:
 5. [ ] `netstat -ano | findstr LISTENING` shows the Rails port bound to `127.0.0.1` only (never `0.0.0.0`); Windows Firewall shows no new inbound rule.
 6. [ ] Launch a second instance: no second Rails starts; first window is focused.
 7. [ ] Close the window: `ruby.exe` / `puma` processes are gone (no orphans in Task Manager).
-8. [ ] Relaunch: data persists (create a dummy row in Rails console or wait for Phase 1 UI); startup works with networking disabled (airplane mode).
+8. [ ] Relaunch: data persists (write rows via §11.7 scratch table — Phase 0 has no UI tables); startup works with networking disabled (airplane mode).
 9. [ ] Kill the app via Task Manager → Relaunch: Rails restarts cleanly, data intact.
 10. [ ] Uninstall via Settings → Apps: binaries removed; `%PROGRAMDATA%\GymManagementSystem` **still present** (data preserved by default).
 11. [ ] Install into a path with spaces (default already has one); still boots.
@@ -204,9 +204,9 @@ Council (5 advisors + 5 peer reviewers + chairman, 2026-10-12) verdict: gate = *
 2. **12-item smoke (§10.3), each with an artifact** — screenshot, saved command output, or timestamped log. No artifact = not passed.
 3. **Off-machine data copy** (this is also the ongoing backup): copy `%PROGRAMDATA%\GymManagementSystem` to external drive/cloud before any destructive test.
 4. **Three data-survival tests, in this order, after item 3:**
-   - (a) Create rows → Task Manager kill process tree mid-save → relaunch → every row present, WAL recovered.
-   - (b) Create rows → hard reboot (or pull power) mid-save → relaunch → `PRAGMA integrity_check` clean, rows intact. *(Run via `sqlite3 gms.sqlite3 "PRAGMA integrity_check;"` from an elevated prompt, or via Rails console.)*
-   - (c) Restore from the off-machine copy into a wiped data dir → app boots with data.
+   - (a) Write rows (§11.7) → Task Manager kill process tree mid-save → relaunch → count in §11.7 query shows every row, WAL recovered.
+   - (b) Write rows (§11.7) → hard reboot (or pull power) mid-save → relaunch → `PRAGMA integrity_check` = `ok` via §11.7 query, row count intact.
+   - (c) Restore from the off-machine copy into a wiped data dir → app boots with data (§11.7 count matches).
 5. **Loud-failure checks:** occupy the loopback port before launch (`netstat`) → visible error window, not blank WebView; interrupt the installer mid-way (kill setup.exe) → no broken hybrid left behind, clean re-install possible.
 6. **One week of real gym usage**, fixed duration, zero data incidents (WAL files present, no corruption messages in `production.log`).
 7. **Named owner signs the "Phase 0 Passed" doc** (date + name). Artifacts retained alongside the doc.
@@ -244,6 +244,27 @@ Launch-time `PRAGMA integrity_check` with an owner-facing error message — conv
 | 7 | Interrupted install → clean re-install | note + second install | | |
 | 8 | One week usage, zero incidents | dated log | | |
 | 9 | Owner signature | pass doc | | |
+
+### 11.7 Gate data commands (commands verified: local prod env returns `count=1`, `integrity=ok`)
+
+Phase 0 has **no tables** (baseline migration is empty) — row tests use a scratch table via raw SQL (never via migrations; `schema.rb` untouched). All commands from elevated cmd, app stopped (close window first) unless a step says otherwise:
+
+```bat
+cd /d "C:\Program Files\Gym Management System\app"
+set RAILS_ENV=production
+set GMS_DATA_DIR=%PROGRAMDATA%\GymManagementSystem
+
+:: write 3 rows (pre-kill / pre-reboot)
+..\ruby\bin\ruby.exe bin\rails runner "ActiveRecord::Base.connection.execute(%q{CREATE TABLE IF NOT EXISTS phase0_smoke (id INTEGER PRIMARY KEY AUTOINCREMENT, note TEXT, created_at TEXT)}); 3.times { |i| ActiveRecord::Base.connection.execute(%q{INSERT INTO phase0_smoke (note, created_at) VALUES ('row} + i.to_s + %q{', datetime('now'))}) }; puts 'count=' + ActiveRecord::Base.connection.select_value(%q{SELECT count(*) FROM phase0_smoke}).to_s"
+
+:: after relaunch: verify count + integrity (expect count=3+, integrity=ok)
+..\ruby\bin\ruby.exe bin\rails runner "puts 'count=' + ActiveRecord::Base.connection.select_value(%q{SELECT count(*) FROM phase0_smoke}).to_s; puts 'integrity=' + ActiveRecord::Base.connection.select_value(%q{PRAGMA integrity_check}).to_s"
+
+:: after gate passed: drop the scratch table
+..\ruby\bin\ruby.exe bin\rails runner "ActiveRecord::Base.connection.execute(%q{DROP TABLE IF EXISTS phase0_smoke}); puts 'dropped'"
+```
+
+Notes: `sqlite3.exe` CLI is **not** in the portable install — rails runner only. Production env requires `GMS_DATA_DIR` or the runner silently targets the wrong path. App must be stopped for restore (step 5c) — close the window, confirm no `ruby.exe` in Task Manager first.
 
 ---
 
