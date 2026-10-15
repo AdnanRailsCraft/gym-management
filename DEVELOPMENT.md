@@ -104,3 +104,7 @@ Development and test use separate databases. Packaged builds use `%PROGRAMDATA%\
 - [ ] Affected workflow exercised manually.
 - [ ] Documentation and changelog updated.
 - [ ] Pull request describes files changed, tests run, and remaining issues.
+
+## 10. Performance
+
+Indexing, caching, and load-testing rules: see [PERFORMANCE.md](PERFORMANCE.md).

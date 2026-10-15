@@ -70,8 +70,9 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Replace the default in-process memory cache store with a durable alternative.
-  # config.cache_store = :mem_cache_store
+  # Single-process gym PC: in-process cache is enough. Never cache ledger/money
+  # data — see PERFORMANCE.md. Memory lost on restart is acceptable.
+  config.cache_store = :memory_store, { size: 64 * 1024 * 1024 }
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
   # config.active_job.queue_adapter = :resque
