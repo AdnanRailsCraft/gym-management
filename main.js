@@ -1,15 +1,13 @@
-// Main process — creates the window and loads index.html
+// Main process — Electron docs viewer
 const { app, BrowserWindow } = require("electron");
-const path = require("path");
 
 function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      // nodeIntegration: true, // disabled for security
-      // contextIsolation: true,
+      nodeIntegration: true,
+      // contextIsolation: false (default when nodeIntegration true)
     },
   });
 

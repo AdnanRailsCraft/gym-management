@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/AdnanRailsCraft/gym-management#readme",
   "dependencies": {
-    "electron": "^31.7.7"
+    "electron": "^31.7.7",
+    "marked": "^18.1.1"
   }
 }
