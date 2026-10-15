@@ -1,0 +1,52 @@
+<% content_for :title, "Invoice #{@invoice_number}" %>
+
+<div class="invoice-sheet">
+  <%# Faint watermark behind the sheet — small centered logo at low opacity.
+      If print preview washes out or breaks pagination, remove this img;
+      header logo above already carries the branding. %>
+  <%= gym_logo_image.sub("invoice-logo", "invoice-watermark").html_safe %>
+
+  <header class="invoice-header">
+    <%= gym_logo_image %>
+    <div class="invoice-header-text">
+      <h1><%= gym_name %></h1>
+      <p class="invoice-address"><%= gym_address %></p>
+    </div>
+  </header>
+
+  <section class="invoice-meta">
+    <div>
+      <strong>Invoice #:</strong> <%= @invoice_number %><br>
+      <strong>Date:</strong> <%= l @issued_on, format: :long %>
+    </div>
+    <div>
+      <strong>Billed to:</strong><br>
+      <%= @member_name %>
+    </div>
+  </section>
+
+  <table class="invoice-items">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="amount">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @items.each do |item| %>
+        <tr>
+          <td><%= item[:description] %></td>
+          <td class="amount"><%= format_money(item[:amount_cents]) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>Total</th>
+        <th class="amount"><%= format_money(@total_cents) %></th>
+      </tr>
+    </tfoot>
+  </table>
+
+  <p class="invoice-sample-banner">SAMPLE — proof template. Real invoices replace this via Phase 1 data.</p>
+</div>

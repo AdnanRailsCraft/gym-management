@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title><%= yield(:title) || "Invoice" %> — <%= gym_name %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= stylesheet_link_tag "invoice", "data-turbo-track": "reload" %>
+  </head>
+  <body class="invoice-body">
+    <%= yield %>
+  </body>
+</html>
