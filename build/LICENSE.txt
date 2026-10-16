@@ -1,0 +1,21 @@
+Gym Management System — Proprietary Software License (PLACEHOLDER — owner must review before first release)
+
+Copyright (c) 2026 Empire Fitness. All rights reserved.
+
+1. This software is licensed to the gym owner who installed it, for use on
+   their own computers to manage their own gym's data.
+2. The gym owner's data (members, payments, attendance, backups) belongs to
+   the gym owner. This application stores it locally on the owner's computer.
+3. The software is provided "as is", without warranty of any kind, express or
+   implied, including but not limited to the warranties of merchantability,
+   fitness for a particular purpose, and non-infringement. In no event shall
+   the author be liable for any claim, damages, or other liability arising
+   from, out of, or in connection with the software.
+4. Reverse engineering of the installer's embedded application code is not
+   permitted except to the extent allowed by applicable law.
+5. This software does not phone home and does not require an internet
+   connection.
+
+NOTE FOR THE DEVELOPER: This is placeholder wording drafted to unblock the
+installer license screen (docs/PACKAGING.md section 6). The owner must approve
+the final license text before any public release (docs/RELEASE_CHECKLIST.md).

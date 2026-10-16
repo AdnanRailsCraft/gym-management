@@ -1,0 +1,157 @@
+/**
+ * Permission keys — single source of truth for application code.
+ * No server-only marker: ROLE_KEYS is imported by client forms (checkbox
+ * lists); this module is pure data with no secrets or I/O.
+ * The SQL seed in db/migrations/0002_phase1_foundation.sql must match;
+ * tests/permissions-catalog.test.ts fails the build on drift.
+ */
+export const PERMISSIONS = {
+  dashboardView: "dashboard.view",
+  membersView: "members.view",
+  membersCreate: "members.create",
+  membersUpdate: "members.update",
+  membersArchive: "members.archive",
+  membersExport: "members.export",
+  membersViewHealth: "members.view_health",
+  plansView: "plans.view",
+  plansManage: "plans.manage",
+  membershipsView: "memberships.view",
+  membershipsSell: "memberships.sell",
+  membershipsRenew: "memberships.renew",
+  membershipsFreeze: "memberships.freeze",
+  membershipsExtend: "memberships.extend",
+  membershipsCancel: "memberships.cancel",
+  membershipsSuspend: "memberships.suspend",
+  attendanceView: "attendance.view",
+  attendanceRecord: "attendance.record",
+  attendanceOverride: "attendance.override",
+  paymentsView: "payments.view",
+  paymentsRecord: "payments.record",
+  paymentsRefund: "payments.refund",
+  paymentsAdjust: "payments.adjust",
+  expensesView: "expenses.view",
+  expensesRecord: "expenses.record",
+  expensesApprove: "expenses.approve",
+  reportsOperational: "reports.operational",
+  reportsFinancial: "reports.financial",
+  reportsTraining: "reports.training",
+  auditView: "audit.view",
+  auditViewFinancial: "audit.view_financial",
+  settingsGymUpdate: "settings.gym.update",
+  settingsUsersManage: "settings.users.manage",
+  settingsRolesManage: "settings.roles.manage",
+  settingsAppUpdate: "settings.app.update",
+  backupCreate: "backup.create",
+  backupRestore: "backup.restore",
+  staffView: "staff.view",
+  staffSelfUpdate: "staff.self_update",
+} as const;
+
+export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+export const ALL_PERMISSION_KEYS: readonly PermissionKey[] = Object.values(
+  PERMISSIONS,
+);
+
+export const ROLE_KEYS = [
+  "owner",
+  "manager",
+  "receptionist",
+  "accountant",
+  "trainer",
+  "auditor",
+] as const;
+
+export type RoleKey = (typeof ROLE_KEYS)[number];
+
+/**
+ * Default role grants (REQUIREMENTS §7.2). Mirrors the migration seeds.
+ */
+export const ROLE_DEFAULTS: Record<RoleKey, readonly PermissionKey[]> = {
+  owner: ALL_PERMISSION_KEYS,
+  manager: [
+    PERMISSIONS.dashboardView,
+    PERMISSIONS.membersView,
+    PERMISSIONS.membersCreate,
+    PERMISSIONS.membersUpdate,
+    PERMISSIONS.membersArchive,
+    PERMISSIONS.membersViewHealth,
+    PERMISSIONS.plansView,
+    PERMISSIONS.plansManage,
+    PERMISSIONS.membershipsView,
+    PERMISSIONS.membershipsSell,
+    PERMISSIONS.membershipsRenew,
+    PERMISSIONS.membershipsFreeze,
+    PERMISSIONS.membershipsExtend,
+    PERMISSIONS.membershipsCancel,
+    PERMISSIONS.membershipsSuspend,
+    PERMISSIONS.attendanceView,
+    PERMISSIONS.attendanceRecord,
+    PERMISSIONS.attendanceOverride,
+    PERMISSIONS.paymentsView,
+    PERMISSIONS.paymentsRecord,
+    PERMISSIONS.paymentsRefund,
+    PERMISSIONS.paymentsAdjust,
+    PERMISSIONS.expensesView,
+    PERMISSIONS.expensesRecord,
+    PERMISSIONS.expensesApprove,
+    PERMISSIONS.reportsOperational,
+    PERMISSIONS.reportsFinancial,
+    PERMISSIONS.auditViewFinancial,
+    PERMISSIONS.backupCreate,
+    PERMISSIONS.staffView,
+    PERMISSIONS.staffSelfUpdate,
+  ],
+  receptionist: [
+    PERMISSIONS.dashboardView,
+    PERMISSIONS.membersView,
+    PERMISSIONS.membersCreate,
+    PERMISSIONS.membersUpdate,
+    PERMISSIONS.plansView,
+    PERMISSIONS.membershipsView,
+    PERMISSIONS.membershipsSell,
+    PERMISSIONS.membershipsRenew,
+    PERMISSIONS.attendanceView,
+    PERMISSIONS.attendanceRecord,
+    PERMISSIONS.paymentsView,
+    PERMISSIONS.paymentsRecord,
+    PERMISSIONS.reportsOperational,
+    PERMISSIONS.staffSelfUpdate,
+  ],
+  accountant: [
+    PERMISSIONS.dashboardView,
+    PERMISSIONS.membersView,
+    PERMISSIONS.plansView,
+    PERMISSIONS.membershipsView,
+    PERMISSIONS.attendanceView,
+    PERMISSIONS.paymentsView,
+    PERMISSIONS.paymentsRecord,
+    PERMISSIONS.paymentsRefund,
+    PERMISSIONS.paymentsAdjust,
+    PERMISSIONS.expensesView,
+    PERMISSIONS.expensesRecord,
+    PERMISSIONS.reportsFinancial,
+    PERMISSIONS.auditViewFinancial,
+    PERMISSIONS.staffSelfUpdate,
+  ],
+  trainer: [
+    PERMISSIONS.dashboardView,
+    PERMISSIONS.membersView,
+    PERMISSIONS.attendanceView,
+    PERMISSIONS.reportsTraining,
+    PERMISSIONS.staffSelfUpdate,
+  ],
+  auditor: [
+    PERMISSIONS.dashboardView,
+    PERMISSIONS.membersView,
+    PERMISSIONS.plansView,
+    PERMISSIONS.membershipsView,
+    PERMISSIONS.attendanceView,
+    PERMISSIONS.paymentsView,
+    PERMISSIONS.expensesView,
+    PERMISSIONS.reportsOperational,
+    PERMISSIONS.reportsFinancial,
+    PERMISSIONS.auditView,
+    PERMISSIONS.staffSelfUpdate,
+  ],
+};
