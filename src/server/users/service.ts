@@ -64,32 +64,32 @@ export function updateGymSettings(
 ): GymSettingsRow {
   const before = getGymSettings(db);
   const now = new Date().toISOString();
-  db.prepare(
-    `UPDATE gym_settings SET gym_name = ?, address = ?, phone = ?,
-       currency_code = ?, timezone = ?, receipt_header = ?, receipt_footer = ?,
-       updated_at = ? WHERE id = 1`,
-  ).run(
-    input.gymName,
-    input.address,
-    input.phone,
-    input.currencyCode,
-    input.timezone,
-    input.receiptHeader,
-    input.receiptFooter,
-    now,
-  );
-  const after = getGymSettings(db);
-  const beforePub = publicSettings(before);
-  const afterPub = publicSettings(after);
-  writeAudit(db, {
-    userId: actor.id,
-    actionKey: "settings.gym.update",
-    entityType: "gym_settings",
-    entityId: 1,
-    before: beforePub,
-    after: afterPub,
-  });
-  return after;
+  return db.transaction(() => {
+    db.prepare(
+      `UPDATE gym_settings SET gym_name = ?, address = ?, phone = ?,
+         currency_code = ?, timezone = ?, receipt_header = ?, receipt_footer = ?,
+         updated_at = ? WHERE id = 1`,
+    ).run(
+      input.gymName,
+      input.address,
+      input.phone,
+      input.currencyCode,
+      input.timezone,
+      input.receiptHeader,
+      input.receiptFooter,
+      now,
+    );
+    const after = getGymSettings(db);
+    writeAudit(db, {
+      userId: actor.id,
+      actionKey: "settings.gym.update",
+      entityType: "gym_settings",
+      entityId: 1,
+      before: publicSettings(before),
+      after: publicSettings(after),
+    });
+    return after;
+  })();
 }
 
 export interface CreateUserInput {
@@ -224,6 +224,19 @@ export function assignRoles(db: Db, userId: number, roleKeys: RoleKey[]): void {
   })();
 }
 
+function activeOwnerCountExcept(db: Db, excludeUserId: number): number {
+  return (
+    db
+      .prepare(
+        `SELECT COUNT(*) AS c FROM users u
+         JOIN user_roles ur ON ur.user_id = u.id
+         JOIN roles r ON r.id = ur.role_id
+         WHERE r.key = 'owner' AND u.is_active = 1 AND u.id != ?`,
+      )
+      .get(excludeUserId) as { c: number }
+  ).c;
+}
+
 export function setUserActive(
   db: Db,
   actor: AuthzUser,
@@ -235,6 +248,17 @@ export function setUserActive(
     .prepare("SELECT id, is_active FROM users WHERE id = ?")
     .get(userId) as { id: number; is_active: number } | undefined;
   if (!before) throw new Error("User not found");
+  if (!isActive) {
+    const hasOwner = db
+      .prepare(
+        `SELECT 1 AS ok FROM user_roles ur JOIN roles r ON r.id = ur.role_id
+         WHERE ur.user_id = ? AND r.key = 'owner' LIMIT 1`,
+      )
+      .get(userId);
+    if (hasOwner && activeOwnerCountExcept(db, userId) === 0) {
+      throw new Error("Cannot deactivate the last active owner");
+    }
+  }
   const now = new Date().toISOString();
   db.transaction(() => {
     db.prepare("UPDATE users SET is_active = ?, updated_at = ? WHERE id = ?").run(
@@ -294,6 +318,12 @@ export function updateUserRoles(
        WHERE ur.user_id = ? ORDER BY r.key`,
     )
     .all(userId) as { key: string }[];
+  const hadOwner = before.some((r) => r.key === "owner");
+  if (hadOwner && !keys.includes("owner")) {
+    if (activeOwnerCountExcept(db, userId) === 0) {
+      throw new Error("Cannot remove the last active owner role");
+    }
+  }
   db.transaction(() => {
     assignRoles(db, userId, keys);
     writeAudit(db, {

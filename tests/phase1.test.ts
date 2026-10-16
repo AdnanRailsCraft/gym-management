@@ -191,6 +191,33 @@ describe("users service", () => {
       .get() as { before_json: string; after_json: string };
     expect(JSON.parse(audit.after_json).roles).toEqual(["trainer", "receptionist"]);
   });
+
+  it("refuses to remove the last active owner role", async () => {
+    const { db } = await makeTestDb();
+    const owner = await setupOwner(db);
+    const actor = { ...OWNER_ACTOR, id: owner };
+    expect(() => updateUserRoles(db, actor, owner, ["manager"])).toThrow(
+      /last active owner/,
+    );
+  });
+
+  it("refuses to deactivate the last active owner", async () => {
+    const { db } = await makeTestDb();
+    const owner = await setupOwner(db);
+    const actor = { ...OWNER_ACTOR, id: owner };
+    const deputy = await createUser(db, actor, {
+      username: "deputy",
+      fullName: "Deputy Owner",
+      password: "deputy pass 1x",
+      email: null,
+      roleKeys: ["manager"],
+    });
+    // Deactivating sole owner as self is already blocked; strip roles via
+    // another user account to test the last-owner guard on setUserActive.
+    expect(() => setUserActive(db, { ...actor, id: deputy }, owner, false)).toThrow(
+      /last active owner/,
+    );
+  });
 });
 
 describe("gym settings + audit immutability", () => {

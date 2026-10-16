@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/server/auth/current-user";
 import { getDb } from "@/server/db/connection";
-import { authorize, PolicyError } from "@/server/policies/authorize";
+import { authorize, PolicyError, type AuthzUser } from "@/server/policies/authorize";
 import { PERMISSIONS, ROLE_KEYS } from "@/server/policies/permissions";
 import {
   createUser,
@@ -18,11 +18,13 @@ export interface UserFormState {
   ok: boolean;
 }
 
-async function guard(): Promise<{ ok: true } | { ok: false; error: string }> {
+async function guard(): Promise<
+  { ok: true; user: AuthzUser } | { ok: false; error: string }
+> {
   const user = await requireUser();
   try {
     authorize(user, PERMISSIONS.settingsUsersManage);
-    return { ok: true };
+    return { ok: true, user };
   } catch (err) {
     if (err instanceof PolicyError) return { ok: false, error: err.message };
     throw err;
@@ -63,10 +65,9 @@ export async function createUserAction(
     return { error: "Select at least one role", ok: false };
   }
 
-  const user = await requireUser();
   const db = getDb();
   try {
-    await createUser(db, user, {
+    await createUser(db, g.user, {
       username: parsed.data.username,
       fullName: parsed.data.fullName,
       password: parsed.data.password,
@@ -94,9 +95,8 @@ export async function setUserActiveAction(formData: FormData): Promise<void> {
   const parsed = userIdSchema.safeParse({ userId: formData.get("userId") });
   if (!parsed.success) throw new Error("Invalid user");
   const active = formData.get("active") === "1";
-  const user = await requireUser();
   try {
-    setUserActive(getDb(), user, parsed.data.userId, active);
+    setUserActive(getDb(), g.user, parsed.data.userId, active);
   } catch (err) {
     throw err instanceof Error ? err : new Error("Update failed");
   }
@@ -121,8 +121,7 @@ export async function resetPasswordAction(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input", ok: false };
   }
-  const user = await requireUser();
-  await resetUserPassword(getDb(), user, parsed.data.userId, parsed.data.password);
+  await resetUserPassword(getDb(), g.user, parsed.data.userId, parsed.data.password);
   revalidatePath("/settings/users");
   return { error: null, ok: true };
 }
@@ -143,9 +142,8 @@ export async function updateRolesAction(
     roles: formData.getAll("roles").map(String),
   });
   if (!parsed.success) return { error: "Invalid roles", ok: false };
-  const user = await requireUser();
   try {
-    updateUserRoles(getDb(), user, parsed.data.userId, parsed.data.roles);
+    updateUserRoles(getDb(), g.user, parsed.data.userId, parsed.data.roles);
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Update failed", ok: false };
   }

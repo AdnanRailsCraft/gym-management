@@ -25,11 +25,21 @@ All user-visible changes are recorded here, newest first. The format follows [Ke
 - Technology stack changed from Ruby on Rails to **Electron + Next.js (TypeScript)** with SQLite. Requirements, design, development, packaging, security, and agent-prompt documents updated accordingly.
 - `docs/PACKAGING.md` §10 findings log records Phase 0 prototype results (Linux host: packaged app verified end-to-end; Windows NSIS build requires a Windows host).
 - `.gitignore` added; `node_modules/` and obsolete Phase 0 starter files untracked from git.
+- Extracted shared `gymSettingsSchema` and `emptyToNull` helper into `src/server/gym-form.ts` (deduplicates setup wizard and gym settings form logic).
 
 ### Fixed
 - `scripts/db-migrate.ts`: top-level `await` broke under CJS/tsx — wrapped in `async function main()`.
 - `src/proxy.ts`: `/api/health` was session-gated (Electron main health probe has no session cookie) — exempted; `/login` with valid session still redirects to `/`.
-- Setup page marked `force-dynamic` so Next does not static-render `ownerExists()` at build time.
+- `src/proxy.ts`: `/api/` and `/_next/` were both session-gated — assets for `/login` and `/setup` got 401 and the app shell never hydrated. `/_next/*` now skips the session gate entirely; `/api/*` still requires the token.
+- `src/server/users/service.ts`: last active owner can now be deactivated via `setUserActive` or role-stripped via `updateUserRoles` — both now guard against removing the final owner (prevents reopening the `/setup` wizard).
+- `src/server/users/service.ts`: `updateGymSettings` is now atomic (settings update + audit write in one transaction).
+- `src/server/auth/login.ts`: failed-login counters (`failed_login_count`, `locked_until`) are now cleared on the disabled-user path (correct password on a disabled account).
+- `electron/main.ts`: will-navigate allowlist used a prefix match (`navUrl.startsWith(url)`) that blocked same-origin asset navigations — now compares origin properly.
+- `electron/main.ts`: `before-quit` now waits up to 2 s for the backend utility process to exit before quitting (reduces SQLite WAL teardown risk on Windows).
+- `src/app/(app)/settings/users/actions.ts`: `requireUser()` called twice in each action — now returns the user from a single guard call.
+- `src/app/setup/actions.ts`: double audit (`user.create` + `setup.completed`) removed — `completeSetup` already writes `setup.completed`.
+- Deleted unused `createUserPasswordHash` export in `src/server/auth/login.ts`.
+- Removed unused `drizzle-orm` dependency.
 
 ### Notes
 - Windows §7 clean-machine evidence still pending; installer unsigned per documented default. Windows installer cannot be built on this Linux host (no wine).

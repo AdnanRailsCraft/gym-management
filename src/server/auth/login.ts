@@ -1,6 +1,6 @@
 import "server-only";
 import type { Db } from "@/server/db/index";
-import { hashPassword, verifyPassword, verifyPasswordDummy } from "./password";
+import { verifyPassword, verifyPasswordDummy } from "./password";
 import { createSession, type CreatedSession } from "./sessions";
 
 export const MAX_FAILED_LOGINS = 5;
@@ -68,6 +68,11 @@ export async function attemptLogin(
   }
 
   if (user.is_active !== 1) {
+    // Password was correct — clear any failure counter before refusing.
+    db.prepare(
+      `UPDATE users SET failed_login_count = 0, locked_until = NULL, updated_at = ?
+       WHERE id = ?`,
+    ).run(now, user.id);
     return { ok: false, reason: "disabled" };
   }
 
@@ -84,8 +89,4 @@ export async function attemptLogin(
     fullName: user.full_name,
     session,
   };
-}
-
-export async function createUserPasswordHash(password: string): Promise<string> {
-  return hashPassword(password);
 }

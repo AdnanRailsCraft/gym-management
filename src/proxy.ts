@@ -22,7 +22,12 @@ export default async function proxy(req: NextRequest) {
   }
 
   const { pathname } = req.nextUrl;
-  const isApi = pathname.startsWith("/api/") || pathname.startsWith("/_next/");
+  // Static assets only need the launch-token gate (already ran above).
+  // Client JS/CSS for /login and /setup must load without a session.
+  if (pathname.startsWith("/_next/")) {
+    return NextResponse.next();
+  }
+  const isApi = pathname.startsWith("/api/");
   const token = req.cookies.get(SESSION_COOKIE)?.value ?? null;
   const db = getDb();
   const sessionOk = validateSession(db, token) !== null;

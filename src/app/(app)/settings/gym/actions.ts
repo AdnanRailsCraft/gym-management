@@ -1,6 +1,7 @@
 "use server";
 
-import { z } from "zod";
+import { gymSettingsSchema } from "@/server/gym-form";
+import { emptyToNull } from "@/server/gym-form";
 import { requireUser } from "@/server/auth/current-user";
 import { getDb } from "@/server/db/connection";
 import { authorize, PolicyError } from "@/server/policies/authorize";
@@ -10,24 +11,6 @@ import { updateGymSettings } from "@/server/users/service";
 export interface GymFormState {
   error: string | null;
   saved: boolean;
-}
-
-const schema = z.object({
-  gymName: z.string().trim().min(1, "Gym name is required"),
-  address: z.string().trim().optional(),
-  phone: z.string().trim().optional(),
-  currencyCode: z
-    .string()
-    .trim()
-    .regex(/^[A-Z]{3}$/, "Use a 3-letter currency code, e.g. PKR"),
-  timezone: z.string().trim().min(1, "Timezone is required"),
-  receiptHeader: z.string().trim().optional(),
-  receiptFooter: z.string().trim().optional(),
-});
-
-function emptyToNull(value: string | undefined): string | null {
-  const v = value?.trim();
-  return v ? v : null;
 }
 
 export async function saveGymSettingsAction(
@@ -42,7 +25,7 @@ export async function saveGymSettingsAction(
     throw err;
   }
 
-  const parsed = schema.safeParse({
+  const parsed = gymSettingsSchema.safeParse({
     gymName: formData.get("gymName"),
     address: formData.get("address") ?? "",
     phone: formData.get("phone") ?? "",

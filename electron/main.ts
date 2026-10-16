@@ -123,7 +123,12 @@ async function createWindow(url: string): Promise<void> {
   mainWindow.once("ready-to-show", () => mainWindow?.show());
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   mainWindow.webContents.on("will-navigate", (event, navUrl) => {
-    if (!navUrl.startsWith(url)) event.preventDefault();
+    try {
+      if (new URL(navUrl).origin === new URL(url).origin) return;
+    } catch {
+      // fall through — block unparseable targets
+    }
+    event.preventDefault();
   });
   await mainWindow.loadURL(url);
 }
@@ -225,11 +230,16 @@ if (!gotLock) {
     app.quit();
   });
 
-  app.on("before-quit", () => {
+  app.on("before-quit", (event) => {
     shuttingDown = true;
     if (backend) {
-      backend.kill();
+      // Give the utility process a moment to flush SQLite WAL on quit.
+      event.preventDefault();
+      const proc = backend;
       backend = null;
+      proc.once("exit", () => app.quit());
+      proc.kill();
+      setTimeout(() => app.quit(), 2000);
     }
   });
 }

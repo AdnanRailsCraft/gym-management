@@ -116,6 +116,26 @@ Use a **clean Windows VM or laptop without developer tools** for the installer r
     npx @electron/fuses read --app dist\win-unpacked\GymManagementSystem.exe
     ```
 
+15. **Portable zip runs without ICU error.**
+    If you see the ICU error below, run through the troubleshooting checklist first.
+
+    **Troubleshooting "Invalid file descriptor to ICU data received":**
+    This error occurs when Chromium cannot find or open `icudtl.dat` at the expected path. Common causes and fixes:
+
+    1. **Incomplete extraction.** Zip was not fully extracted, or `resources/` is missing.  
+       Fix: delete the extracted folder completely. Re-extract from `GymManagementSystem-win-portable.zip` using the right-click "Extract All" dialog. Confirm `resources\icudtl.dat` exists and is ~10.4 MB.
+
+    2. **Running from a network or OneDrive-synced folder.**  
+       Fix: copy the extracted folder to a local path (e.g. `C:\Users\Public\GymTest`). Re-extract the zip directly there. Run from local path.
+
+    3. **Antivirus blocking file access.**  
+       Fix: exclude the app folder from real-time scanning, or right-click the exe → Properties → check "Unblock" (if present under Security).
+
+    4. **Path with special characters.**  
+       Fix: extract to a simple path like `C:\Users\Public\GymTest`.
+
+    If the error persists after all four steps, run the app from `cmd.exe` and paste the full output here.
+
 ## C. Recording table
 
 | # | Criterion | Pass/Fail | Evidence (paste output, screenshot path, or numbers) |
@@ -134,6 +154,7 @@ Use a **clean Windows VM or laptop without developer tools** for the installer r
 | 12 | Uninstall keeps data | | |
 | 13 | Size/time numbers | | |
 | 14 | Security settings in prod build | | |
+| 15 | Portable zip runs without ICU error | | |
 
 Installer SHA-256: _______________________
 SmartScreen / Defender notes: _______________________
