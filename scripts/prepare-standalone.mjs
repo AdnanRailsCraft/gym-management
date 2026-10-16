@@ -40,4 +40,24 @@ cp(path.join(root, "db", "migrations"), path.join(standalone, "db", "migrations"
   cp(src, dest);
 }
 
+// Next traces optional platform natives (sharp, @next/swc-*) from the build
+// host. They are not used at runtime here (images.unoptimized: true; server
+// is prebuilt), and shipping Linux .node files inside a Windows package is
+// dead weight that confuses audits. Drop them from the standalone tree.
+const drop = ["sharp", "@img", "@emnapi", "@img/sharp-libvips-linux-x64"];
+for (const rel of drop) {
+  const p = path.join(standalone, "node_modules", rel);
+  if (fs.existsSync(p)) {
+    fs.rmSync(p, { recursive: true, force: true });
+  }
+}
+const swcDir = path.join(standalone, "node_modules", "@next");
+if (fs.existsSync(swcDir)) {
+  for (const entry of fs.readdirSync(swcDir)) {
+    if (entry.startsWith("swc-")) {
+      fs.rmSync(path.join(swcDir, entry), { recursive: true, force: true });
+    }
+  }
+}
+
 console.log("prepare-standalone: ok");
