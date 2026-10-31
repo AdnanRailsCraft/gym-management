@@ -22,6 +22,14 @@ export function DevMenuModal() {
   const [resetPassUserId, setResetPassUserId] = useState<number | null>(null);
   const [newPassword, setNewPassword] = useState("");
 
+  // Password protection for dev menu
+  const [devPassword, setDevPassword] = useState("");
+  const [authenticated, setAuthenticated] = useState(false);
+  const DEV_PASSWORD = "Pakistan@12";
+
+  // Password prompt visibility
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+
   const refresh = () => {
     startTransition(async () => {
       try {
@@ -42,18 +50,18 @@ export function DevMenuModal() {
         (e.key === "D" || e.key === "d")
       ) {
         e.preventDefault();
-        setIsOpen((prev) => !prev);
+        setShowPasswordPrompt(true);
       }
       if (e.key === "F10") {
         e.preventDefault();
-        setIsOpen((prev) => !prev);
+        setShowPasswordPrompt(true);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
 
     if (window.gms?.onOpenDevMenu) {
-      window.gms.onOpenDevMenu(() => setIsOpen(true));
+      window.gms.onOpenDevMenu(() => setShowPasswordPrompt(true));
     }
 
     return () => {
@@ -62,7 +70,16 @@ export function DevMenuModal() {
   }, []);
 
   useEffect(() => {
+    if (showPasswordPrompt) {
+      setDevPassword("");
+      setError(null);
+    }
+  }, [showPasswordPrompt]);
+
+  useEffect(() => {
     if (isOpen) {
+      setAuthenticated(false);
+      setDevPassword("");
       refresh();
       setMessage(null);
       setError(null);
@@ -178,7 +195,7 @@ export function DevMenuModal() {
       {/* Floating pill button in bottom right corner */}
       <button
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => setShowPasswordPrompt(true)}
         style={{
           position: "fixed",
           bottom: "16px",
@@ -204,7 +221,128 @@ export function DevMenuModal() {
       </button>
 
       {/* Modal Dialog */}
-      {isOpen && (
+      {/* Password Prompt Modal */}
+      {showPasswordPrompt && !isOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(4px)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPasswordPrompt(false);
+          }}
+        >
+          <div
+            style={{
+              background: "#1e293b",
+              color: "#f8fafc",
+              border: "1px solid #334155",
+              borderRadius: "12px",
+              width: "100%",
+              maxWidth: "400px",
+              padding: "24px",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+            }}
+          >
+            <h2 style={{ margin: "0 0 8px", fontSize: "18px", fontWeight: 700, color: "#38bdf8" }}>
+              🔒 Developer Menu Access
+            </h2>
+            <p style={{ fontSize: "13px", color: "#94a3b8", margin: "0 0 16px" }}>
+              Enter the developer password to access the control panel.
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (devPassword === DEV_PASSWORD) {
+                  setAuthenticated(true);
+                  setShowPasswordPrompt(false);
+                  setIsOpen(true);
+                } else {
+                  setError("Incorrect password. Access denied.");
+                }
+              }}
+            >
+              <input
+                type="password"
+                value={devPassword}
+                onChange={(e) => setDevPassword(e.target.value)}
+                placeholder="Enter password"
+                autoFocus
+                style={{
+                  width: "100%",
+                  background: "#0f172a",
+                  color: "white",
+                  border: "1px solid #475569",
+                  borderRadius: "6px",
+                  padding: "8px 12px",
+                  fontSize: "14px",
+                  marginBottom: "12px",
+                  boxSizing: "border-box",
+                }}
+              />
+              {error && (
+                <div
+                  style={{
+                    marginBottom: "12px",
+                    padding: "8px 12px",
+                    backgroundColor: "#7f1d1d",
+                    border: "1px solid #dc2626",
+                    borderRadius: "6px",
+                    fontSize: "13px",
+                    color: "#fecaca",
+                  }}
+                >
+                  ⚠️ {error}
+                </div>
+              )}
+              <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordPrompt(false)}
+                  style={{
+                    background: "#334155",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "8px 16px",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    background: "#0284c7",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "8px 16px",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Unlock
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isOpen && authenticated && (
         <div
           style={{
             position: "fixed",
