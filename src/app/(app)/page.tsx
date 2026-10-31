@@ -4,6 +4,7 @@ import { getGymSettings } from "@/server/users/service";
 import { getDb } from "@/server/db/connection";
 import { requireUser } from "@/server/auth/current-user";
 import { getMemberStats } from "@/server/members/service";
+import { listPlans } from "@/server/members/plans";
 import { listExpiringMemberships, reminderWindowDays } from "@/server/members/reminders";
 import { can } from "@/server/policies/authorize";
 import { PERMISSIONS } from "@/server/policies/permissions";
@@ -19,6 +20,7 @@ import {
   IconWhatsApp,
   IconArrowRight,
   IconReceipt,
+  IconPlus,
   IconHeartPulse,
   IconCalendar,
 } from "@/components/icons";
@@ -28,6 +30,9 @@ export default async function DashboardPage() {
   const db = getDb();
   const gym = getGymSettings(db);
   const memberStats = getMemberStats(db);
+  const allPlans = listPlans(db, { includeInactive: true });
+  const hasPlans = allPlans.length > 0;
+  const hasMembers = memberStats.total > 0;
   const canSeeMembers = can(user, PERMISSIONS.membersView);
   const canSeeReminders = can(user, PERMISSIONS.membershipsView);
   const canCheckIn = can(user, PERMISSIONS.attendanceView);
@@ -90,6 +95,118 @@ export default async function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Getting Started Checklist — shown for new gyms */}
+      {!hasMembers || !hasPlans ? (
+        <div className="card" style={{ marginBottom: "24px", borderLeft: "4px solid var(--primary)" }}>
+          <h2 style={{ margin: "0 0 12px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <IconZap size={20} style={{ color: "var(--primary)" }} />
+            <span>Getting Started</span>
+          </h2>
+          <p className="muted" style={{ margin: "0 0 16px" }}>
+            Welcome! Follow these steps to set up your gym management system.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "1.2rem" }}>{hasPlans ? "✅" : "⬜"}</span>
+              <div>
+                <strong>1. Create membership plans</strong>
+                <p className="muted small" style={{ margin: 0 }}>
+                  {hasPlans
+                    ? `${allPlans.length} plan(s) ready. You can add more anytime.`
+                    : "Set up plans like Monthly, Quarterly, Annual with prices."}
+                </p>
+              </div>
+              {!hasPlans ? (
+                <Link className="btn-primary" href="/plans" style={{ marginLeft: "auto" }}>
+                  <IconPlus size={14} />
+                  <span>Create Plan</span>
+                </Link>
+              ) : null}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "1.2rem" }}>{hasMembers ? "✅" : "⬜"}</span>
+              <div>
+                <strong>2. Register your first client</strong>
+                <p className="muted small" style={{ margin: 0 }}>
+                  {hasMembers
+                    ? `${memberStats.total} client(s) registered.`
+                    : "Add client details, phone, and contact info."}
+                </p>
+              </div>
+              {!hasMembers ? (
+                <Link className="btn-primary" href="/members" style={{ marginLeft: "auto" }}>
+                  <IconUsers size={14} />
+                  <span>Register Client</span>
+                </Link>
+              ) : null}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "1.2rem" }}>{hasMembers && hasPlans ? "✅" : "⬜"}</span>
+              <div>
+                <strong>3. Sell a membership</strong>
+                <p className="muted small" style={{ margin: 0 }}>
+                  Open a client profile and sell them a plan to activate their subscription.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "1.2rem" }}>{hasMembers && hasPlans ? "⬜" : "⬜"}</span>
+              <div>
+                <strong>4. Take a payment</strong>
+                <p className="muted small" style={{ margin: 0 }}>
+                  Create an invoice and record the payment at the front desk.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Task Summary — what needs attention today */}
+      {hasMembers ? (
+        <div className="card" style={{ marginBottom: "24px", borderLeft: "4px solid #d97706" }}>
+          <h2 style={{ margin: "0 0 12px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <IconBell size={20} style={{ color: "#d97706" }} />
+            <span>Today's Tasks</span>
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {memberStats.expiringSoon > 0 ? (
+              <Link href="/reminders" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "inherit" }}>
+                <span style={{ fontSize: "1.1rem" }}>⚠️</span>
+                <span>
+                  <strong>{memberStats.expiringSoon}</strong> membership{memberStats.expiringSoon !== 1 ? "s" : ""} expiring soon — send reminders
+                </span>
+                <IconArrowRight size={14} style={{ marginLeft: "auto" }} />
+              </Link>
+            ) : null}
+            {memberStats.expired > 0 ? (
+              <Link href="/reminders" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "inherit" }}>
+                <span style={{ fontSize: "1.1rem" }}>🔴</span>
+                <span>
+                  <strong>{memberStats.expired}</strong> membership{memberStats.expired !== 1 ? "s" : ""} expired — follow up
+                </span>
+                <IconArrowRight size={14} style={{ marginLeft: "auto" }} />
+              </Link>
+            ) : null}
+            {memberStats.frozen > 0 ? (
+              <Link href="/members" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "inherit" }}>
+                <span style={{ fontSize: "1.1rem" }}>❄️</span>
+                <span>
+                  <strong>{memberStats.frozen}</strong> frozen membership{memberStats.frozen !== 1 ? "s" : ""} — check status
+                </span>
+                <IconArrowRight size={14} style={{ marginLeft: "auto" }} />
+              </Link>
+            ) : null}
+            {memberStats.expiringSoon === 0 && memberStats.expired === 0 && memberStats.frozen === 0 ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "1.1rem" }}>✅</span>
+                <span className="muted">All caught up! No urgent tasks today.</span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       {/* Quick Action Shortcuts */}
       <div className="quick-action-strip">
