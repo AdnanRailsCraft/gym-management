@@ -54,12 +54,12 @@ export function buildInvoiceWhatsAppMessage(input: InvoiceWhatsAppInput): string
   const fmt = (minor: number) => formatMinorUnits(minor, currencyCode, minorUnits);
 
   const statusEmoji =
-    status === "paid" ? "PAID ✅" : status === "partial" ? "PARTIAL ⏳" : status === "voided" ? "VOIDED ❌" : "UNPAID ⚠️";
+    status === "paid" ? "PAID" : status === "partial" ? "PARTIAL" : status === "voided" ? "VOIDED" : "UNPAID"
 
   const dateStr = issuedAt.slice(0, 10);
 
   const lines = [
-    `🏋️ *${gymName.toUpperCase()} — INVOICE / RECEIPT*`,
+    `️ *${gymName.toUpperCase()} — INVOICE / RECEIPT*`,
     `Invoice #: *${invoiceNumber}*`,
     `Date: ${dateStr}`,
     `Client: *${memberName}* (${memberNumber})`,
@@ -90,10 +90,10 @@ export function buildInvoiceWhatsAppMessage(input: InvoiceWhatsAppInput): string
   lines.push(``);
   lines.push(`Thank you for training with ${gymName}!`);
   if (gymPhone) {
-    lines.push(`📞 Contact: ${gymPhone}`);
+    lines.push(` Contact: ${gymPhone}`);
   }
   if (gymAddress) {
-    lines.push(`📍 Address: ${gymAddress}`);
+    lines.push(` Address: ${gymAddress}`);
   }
 
   return lines.join("\n");

@@ -272,7 +272,7 @@ describe("invoices and WhatsApp receipts", () => {
     expect(message).toContain(inv.invoice_number);
     expect(message).toContain("Ali Khan");
     expect(message).toContain("Monthly Standard");
-    expect(message).toContain("PAID ✅");
+    expect(message).toContain("PAID");
 
     const href = invoiceWhatsAppHref("0300 1234567", {
       gymName: "Empire Fitness",

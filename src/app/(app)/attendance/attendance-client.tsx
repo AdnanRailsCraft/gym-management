@@ -216,7 +216,7 @@ export function AttendanceClient({
                             <strong>{r.fullName}</strong>
                             <div className="muted small">
                               {r.memberNumber}
-                              {r.phone ? ` · 📞 ${r.phone}` : ""}
+                              {r.phone ? ` ·  ${r.phone}` : ""}
                               {r.planName ? ` · ${r.planName}` : ""}
                             </div>
                           </div>
@@ -250,7 +250,7 @@ export function AttendanceClient({
                   </div>
                   <div className="muted" style={{ marginTop: "2px", fontSize: "0.9rem" }}>
                     <span>{selected.memberNumber}</span>
-                    {selected.phone ? ` · 📞 ${selected.phone}` : ""}
+                    {selected.phone ? ` ·  ${selected.phone}` : ""}
                     {selected.planName ? ` · Plan: ${selected.planName}` : ""}
                     {selected.endOn ? ` · Valid until: ${selected.endOn}` : ""}
                   </div>

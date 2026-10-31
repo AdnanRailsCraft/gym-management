@@ -48,51 +48,33 @@ export default async function DashboardPage() {
 
   return (
     <div className="page-wide">
-      {/* Hero Banner with gym photo */}
+      {/* Hero Banner */}
       <div
         className="hero-banner"
         style={{
-          backgroundImage: `url("/branding/welcome-banner.jpg")`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
+          background: "var(--brand-black)",
           position: "relative",
-          borderRadius: "16px",
+          borderRadius: "12px",
           overflow: "hidden",
           marginBottom: "24px",
-          minHeight: "210px",
+          padding: "32px",
+          color: "white",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.7))",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: "32px",
-            color: "white",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
-            <Image
-              src="/branding/logo-256.png"
-              alt={gym.gym_name}
-              width={56}
-              height={56}
-              style={{ borderRadius: "12px", objectFit: "contain", boxShadow: "0 4px 16px rgba(0,0,0,0.3)" }}
-            />
-            <div>
-              <h1 style={{ fontSize: "2rem", margin: 0, fontWeight: 700 }}>{gym.gym_name}</h1>
-              <p style={{ margin: "2px 0 0", fontSize: "1.05rem", opacity: 0.95 }}>
-                Desktop Gym Management · Offline Ready
-              </p>
-            </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <Image
+            src="/branding/logo-256.png"
+            alt={gym.gym_name}
+            width={48}
+            height={48}
+            style={{ borderRadius: "8px", objectFit: "contain" }}
+          />
+          <div>
+            <h1 style={{ fontSize: "1.5rem", margin: 0, fontWeight: 600 }}>{gym.gym_name}</h1>
+            <p style={{ margin: "4px 0 0", fontSize: "0.9rem", opacity: 0.7 }}>
+              {todayStr} · Signed in as {user.fullName}
+            </p>
           </div>
-          <p style={{ margin: "6px 0 0", fontSize: "1rem", opacity: 0.85, maxWidth: "520px" }}>
-            {todayStr} · Signed in as <strong>{user.fullName}</strong> ({user.roles.join(", ") || "Staff"})
-          </p>
         </div>
       </div>
 
@@ -108,7 +90,7 @@ export default async function DashboardPage() {
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "1.2rem" }}>{hasPlans ? "✅" : "⬜"}</span>
+              <span style={{ fontSize: "1.2rem", color: hasPlans ? "var(--brand-ok)" : "var(--brand-muted-light)" }}>{hasPlans ? "✓" : "○"}</span>
               <div>
                 <strong>1. Create membership plans</strong>
                 <p className="muted small" style={{ margin: 0 }}>
@@ -125,7 +107,7 @@ export default async function DashboardPage() {
               ) : null}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "1.2rem" }}>{hasMembers ? "✅" : "⬜"}</span>
+              <span style={{ fontSize: "1.2rem" }}>{hasMembers ? "✓" : "○"}</span>
               <div>
                 <strong>2. Register your first client</strong>
                 <p className="muted small" style={{ margin: 0 }}>
@@ -142,7 +124,7 @@ export default async function DashboardPage() {
               ) : null}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "1.2rem" }}>{hasMembers && hasPlans ? "✅" : "⬜"}</span>
+              <span style={{ fontSize: "1.2rem" }}>{hasMembers && hasPlans ? "✓" : "○"}</span>
               <div>
                 <strong>3. Sell a membership</strong>
                 <p className="muted small" style={{ margin: 0 }}>
@@ -151,7 +133,7 @@ export default async function DashboardPage() {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "1.2rem" }}>{hasMembers && hasPlans ? "⬜" : "⬜"}</span>
+              <span style={{ fontSize: "1.2rem" }}>{hasMembers && hasPlans ? "○" : "○"}</span>
               <div>
                 <strong>4. Take a payment</strong>
                 <p className="muted small" style={{ margin: 0 }}>
@@ -173,7 +155,7 @@ export default async function DashboardPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {memberStats.expiringSoon > 0 ? (
               <Link href="/reminders" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "inherit" }}>
-                <span style={{ fontSize: "1.1rem" }}>⚠️</span>
+                
                 <span>
                   <strong>{memberStats.expiringSoon}</strong> membership{memberStats.expiringSoon !== 1 ? "s" : ""} expiring soon — send reminders
                 </span>
@@ -182,7 +164,7 @@ export default async function DashboardPage() {
             ) : null}
             {memberStats.expired > 0 ? (
               <Link href="/reminders" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "inherit" }}>
-                <span style={{ fontSize: "1.1rem" }}>🔴</span>
+                
                 <span>
                   <strong>{memberStats.expired}</strong> membership{memberStats.expired !== 1 ? "s" : ""} expired — follow up
                 </span>
@@ -191,7 +173,7 @@ export default async function DashboardPage() {
             ) : null}
             {memberStats.frozen > 0 ? (
               <Link href="/members" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "inherit" }}>
-                <span style={{ fontSize: "1.1rem" }}>❄️</span>
+                
                 <span>
                   <strong>{memberStats.frozen}</strong> frozen membership{memberStats.frozen !== 1 ? "s" : ""} — check status
                 </span>
@@ -200,7 +182,7 @@ export default async function DashboardPage() {
             ) : null}
             {memberStats.expiringSoon === 0 && memberStats.expired === 0 && memberStats.frozen === 0 ? (
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ fontSize: "1.1rem" }}>✅</span>
+                <span style={{ fontSize: "1.1rem" }}>✓</span>
                 <span className="muted">All caught up! No urgent tasks today.</span>
               </div>
             ) : null}
@@ -213,7 +195,7 @@ export default async function DashboardPage() {
         {canCheckIn ? (
           <Link className="action-pill-btn primary" href="/attendance" title="Fast front-desk check-in">
             <IconZap size={16} />
-            <span>⚡ Quick Check-in</span>
+            <span>Quick Check-in</span>
           </Link>
         ) : null}
         {can(user, PERMISSIONS.membersCreate) ? (
@@ -351,7 +333,7 @@ export default async function DashboardPage() {
                         </Link>
                         <div className="muted small">
                           {c.planName} · ends {c.endOn}
-                          {c.phone ? ` · 📞 ${c.phone}` : ""}
+                          {c.phone ? ` · ${c.phone}` : ""}
                         </div>
                       </div>
                     </div>

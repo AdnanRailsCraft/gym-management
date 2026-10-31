@@ -117,8 +117,8 @@ export default async function MemberDetailPage({
               </div>
               <div className="muted" style={{ marginTop: "6px", display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "0.9rem" }}>
                 <span>Joined {member.joined_on}</span>
-                {member.phone ? <span>📞 {member.phone}</span> : null}
-                {member.email ? <span>✉️ {member.email}</span> : null}
+                {member.phone ? <span> {member.phone}</span> : null}
+                {member.email ? <span> {member.email}</span> : null}
               </div>
             </div>
           </div>
