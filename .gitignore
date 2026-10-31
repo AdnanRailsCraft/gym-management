@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Electron build output
+dist/
+dist-electron/
+
+# Data directories (SQLite databases, user data)
+.data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Temp files
+*.tmp
+*.temp
+
+# Test artifacts
+coverage/
+.vitest/
+
+# Electron builder
+*.blockmap
+
+# NSIS
+*.nsis
+
+# Backup files
+*.bak
+*.backup

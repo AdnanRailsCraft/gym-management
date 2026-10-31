@@ -1,0 +1,47 @@
+appId: com.empirefitness.gymmanagement
+productName: GymManagementSystem
+copyright: Copyright © 2026 Empire Fitness
+directories:
+  output: dist
+  buildResources: build
+files:
+  - package.json
+  - dist-electron/**/*
+# Next standalone server (with db/migrations, public/, native module) ships
+# unpacked so utilityProcess can fork server.js and load better-sqlite3.
+# The second entry is required: electron-builder's copy filter always drops
+# a copy-root named node_modules, so it must be re-declared as its own source.
+extraResources:
+  - from: .next/standalone
+    to: app
+  - from: .next/standalone/node_modules
+    to: app/node_modules
+asar: true
+# Hardening fuses (docs/SECURITY.md). RunAsNode off — backend uses
+# utilityProcess, not child_process.fork.
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+  loadBrowserProcessSpecificV8Snapshot: false
+  grantFileProtocolExtraPrivileges: false
+# Native rebuild is orchestrated explicitly by the `package` script
+# (next build -> install-app-deps -> prepare-standalone) so the
+# better-sqlite3 binary inside .next/standalone matches the Electron ABI.
+npmRebuild: false
+win:
+  icon: build/icon.ico
+  requestedExecutionLevel: asInvoker
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Gym Management System
+  deleteAppDataOnUninstall: false
+  license: build/LICENSE.txt
+  artifactName: GymManagementSystem-Setup-${version}.exe
