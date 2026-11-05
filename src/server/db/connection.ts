@@ -15,3 +15,11 @@ export function getDb(): Db {
   }
   return cached;
 }
+
+/** Close and reset the cached handle (used after restore). */
+export function resetDb(): void {
+  if (cached && cached.open) {
+    cached.close();
+  }
+  cached = null;
+}

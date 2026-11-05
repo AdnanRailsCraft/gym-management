@@ -48,6 +48,7 @@ export default async function AppLayout({
   }
   if (can(user, PERMISSIONS.settingsGymUpdate)) {
     navItems.push({ href: "/settings/gym", label: "Gym settings" });
+    navItems.push({ href: "/settings/backup", label: "Backup & Restore" });
   }
   if (can(user, PERMISSIONS.settingsUsersManage)) {
     navItems.push({ href: "/settings/users", label: "Users" });

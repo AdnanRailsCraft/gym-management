@@ -9,9 +9,9 @@ import {
   IconBell,
   IconZap,
   IconSettings,
-  IconUserCog,
   IconHistory,
   IconReceipt,
+  IconDownload,
 } from "@/components/icons";
 
 export interface NavItem {
@@ -36,8 +36,8 @@ function getNavIcon(href: string) {
       return <IconReceipt size={17} />;
     case "/settings/gym":
       return <IconSettings size={17} />;
-    case "/settings/users":
-      return <IconUserCog size={17} />;
+    case "/settings/backup":
+      return <IconDownload size={17} />;
     case "/audit":
       return <IconHistory size={17} />;
     default:
