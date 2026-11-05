@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   createDefaultAdminAction,
   createDevAdminAction,
@@ -23,12 +23,12 @@ export function DevMenuModal() {
   const [newPassword, setNewPassword] = useState("");
 
   // Password protection for dev menu
-  const [devPassword, setDevPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const DEV_PASSWORD = "Pakistan@12";
 
   // Password prompt visibility
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = () => {
     startTransition(async () => {
@@ -71,7 +71,6 @@ export function DevMenuModal() {
 
   useEffect(() => {
     if (showPasswordPrompt) {
-      setDevPassword("");
       setError(null);
     }
   }, [showPasswordPrompt]);
@@ -79,7 +78,6 @@ export function DevMenuModal() {
   useEffect(() => {
     if (isOpen) {
       setAuthenticated(false);
-      setDevPassword("");
       refresh();
       setMessage(null);
       setError(null);
@@ -263,7 +261,8 @@ export function DevMenuModal() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (devPassword === DEV_PASSWORD) {
+                const entered = passwordInputRef.current?.value ?? "";
+                if (entered === DEV_PASSWORD) {
                   setAuthenticated(true);
                   setShowPasswordPrompt(false);
                   setIsOpen(true);
@@ -274,10 +273,11 @@ export function DevMenuModal() {
             >
               <input
                 type="password"
-                value={devPassword}
-                onChange={(e) => setDevPassword(e.target.value)}
+                ref={passwordInputRef}
+                defaultValue=""
                 placeholder="Enter password"
                 autoFocus
+                id="dev-menu-password"
                 style={{
                   width: "100%",
                   background: "#0f172a",
