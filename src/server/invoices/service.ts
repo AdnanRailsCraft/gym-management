@@ -566,3 +566,53 @@ export function getInvoiceStats(db: Db): {
     invoiceCount: row.count,
   };
 }
+
+export interface DailyCashSummary {
+  todayTotalMinor: number;
+  todayByMethod: Record<string, number>;
+  monthTotalMinor: number;
+  monthByMethod: Record<string, number>;
+}
+
+export function getDailyCashSummary(db: Db): DailyCashSummary {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const monthStr = today.toISOString().slice(0, 7);
+
+  const rows = db
+    .prepare(
+      `SELECT
+         amount_minor,
+         method,
+         received_at
+       FROM invoice_payments
+       WHERE reverses_payment_id IS NULL`,
+    )
+    .all() as { amount_minor: number; method: string; received_at: string }[];
+
+  const todayByMethod: Record<string, number> = {};
+  const monthByMethod: Record<string, number> = {};
+  let todayTotal = 0;
+  let monthTotal = 0;
+
+  for (const row of rows) {
+    const rowDate = row.received_at.slice(0, 10);
+    const rowMonth = row.received_at.slice(0, 7);
+
+    if (rowDate === todayStr) {
+      todayTotal += row.amount_minor;
+      todayByMethod[row.method] = (todayByMethod[row.method] || 0) + row.amount_minor;
+    }
+    if (rowMonth === monthStr) {
+      monthTotal += row.amount_minor;
+      monthByMethod[row.method] = (monthByMethod[row.method] || 0) + row.amount_minor;
+    }
+  }
+
+  return {
+    todayTotalMinor: todayTotal,
+    todayByMethod,
+    monthTotalMinor: monthTotal,
+    monthByMethod,
+  };
+}

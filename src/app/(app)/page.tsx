@@ -5,6 +5,7 @@ import { getDb } from "@/server/db/connection";
 import { requireUser } from "@/server/auth/current-user";
 import { getMemberStats } from "@/server/members/service";
 import { listPlans } from "@/server/members/plans";
+import { getDailyCashSummary } from "@/server/invoices/service";
 import { listExpiringMemberships, reminderWindowDays } from "@/server/members/reminders";
 import { can } from "@/server/policies/authorize";
 import { PERMISSIONS } from "@/server/policies/permissions";
@@ -33,6 +34,7 @@ export default async function DashboardPage() {
   const allPlans = listPlans(db, { includeInactive: true });
   const hasPlans = allPlans.length > 0;
   const hasMembers = memberStats.total > 0;
+  const cashSummary = getDailyCashSummary(db);
   const canSeeMembers = can(user, PERMISSIONS.membersView);
   const canSeeReminders = can(user, PERMISSIONS.membershipsView);
   const canCheckIn = can(user, PERMISSIONS.attendanceView);
@@ -271,6 +273,46 @@ export default async function DashboardPage() {
           <span className="kpi-value">{memberStats.frozen}</span>
         </div>
       </div>
+
+      {/* Daily Cash Summary */}
+      {can(user, PERMISSIONS.paymentsView) ? (
+        <div className="card" style={{ marginBottom: "24px", borderLeft: "4px solid #16a34a" }}>
+          <h2 style={{ margin: "0 0 12px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <IconCreditCard size={20} style={{ color: "#16a34a" }} />
+            <span>Today's Collections</span>
+          </h2>
+          <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
+            <div>
+              <div className="muted small">Today</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#16a34a" }}>
+                {new Intl.NumberFormat("en-US", { style: "currency", currency: gym.currency_code }).format(cashSummary.todayTotalMinor / 100)}
+              </div>
+              <div className="muted small" style={{ marginTop: "4px" }}>
+                {Object.entries(cashSummary.todayByMethod).map(([method, amount]) => (
+                  <span key={method} style={{ marginRight: "12px" }}>
+                    {method.replace("_", " ")}: {new Intl.NumberFormat("en-US", { style: "currency", currency: gym.currency_code }).format(amount / 100)}
+                  </span>
+                ))}
+                {Object.keys(cashSummary.todayByMethod).length === 0 ? "No payments yet today" : ""}
+              </div>
+            </div>
+            <div style={{ borderLeft: "1px solid var(--brand-border)", paddingLeft: "24px" }}>
+              <div className="muted small">This Month</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>
+                {new Intl.NumberFormat("en-US", { style: "currency", currency: gym.currency_code }).format(cashSummary.monthTotalMinor / 100)}
+              </div>
+              <div className="muted small" style={{ marginTop: "4px" }}>
+                {Object.entries(cashSummary.monthByMethod).map(([method, amount]) => (
+                  <span key={method} style={{ marginRight: "12px" }}>
+                    {method.replace("_", " ")}: {new Intl.NumberFormat("en-US", { style: "currency", currency: gym.currency_code }).format(amount / 100)}
+                  </span>
+                ))}
+                {Object.keys(cashSummary.monthByMethod).length === 0 ? "No payments yet this month" : ""}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Needs Attention / Upcoming Renewals */}
       {canSeeReminders ? (
