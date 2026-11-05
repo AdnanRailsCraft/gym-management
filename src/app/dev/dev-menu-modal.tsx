@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import {
   createDefaultAdminAction,
   createDevAdminAction,
@@ -28,7 +28,7 @@ export function DevMenuModal() {
 
   // Password prompt visibility
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = React.useRef<HTMLInputElement>(null);
 
   const refresh = () => {
     startTransition(async () => {
