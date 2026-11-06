@@ -4,6 +4,7 @@ import { can } from "@/server/policies/authorize";
 import { PERMISSIONS } from "@/server/policies/permissions";
 import { getDb } from "@/server/db/connection";
 import { IconSearch } from "@/components/icons";
+import { describeAction } from "@/lib/audit-descriptions";
 
 const PAGE_SIZE = 50;
 
@@ -69,7 +70,7 @@ export default async function AuditPage({
           <input
             name="action"
             defaultValue={actionFilter ?? ""}
-            placeholder="Filter by action key (e.g. user.login)..."
+            placeholder="Filter by action (e.g. member.create, invoice.void)..."
           />
         </div>
         <button type="submit" className="btn-secondary">
@@ -112,7 +113,10 @@ export default async function AuditPage({
                   </span>
                 </td>
                 <td>
-                  <code>{r.action_key}</code>
+                  <strong>{describeAction(r.action_key)}</strong>
+                  <div className="muted small" style={{ marginTop: "2px" }}>
+                    <code style={{ fontSize: "0.75rem" }}>{r.action_key}</code>
+                  </div>
                 </td>
                 <td>
                   {r.entity_type ? `${r.entity_type}#${r.entity_id ?? ""}` : <span className="muted">—</span>}

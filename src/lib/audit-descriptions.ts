@@ -1,0 +1,41 @@
+// Human-readable descriptions for audit action keys
+const ACTION_DESCRIPTIONS: Record<string, string> = {
+  "user.login": "Signed in",
+  "user.logout": "Signed out",
+  "user.create": "Created a user account",
+  "user.update": "Updated a user account",
+  "user.deactivate": "Deactivated a user account",
+  "user.activate": "Activated a user account",
+  "user.password_reset": "Reset a user's password",
+  "member.create": "Registered a new client",
+  "member.update": "Updated client details",
+  "member.archive": "Archived a client",
+  "member.status_change": "Changed client status",
+  "member.health_update": "Updated health notes",
+  "plan.create": "Created a membership plan",
+  "plan.update": "Updated a membership plan",
+  "plan.activate": "Activated a membership plan",
+  "plan.deactivate": "Deactivated a membership plan",
+  "membership.sell": "Sold a membership",
+  "membership.renew": "Renewed a membership",
+  "membership.freeze": "Froze a membership",
+  "membership.unfreeze": "Unfroze a membership",
+  "membership.extend": "Extended a membership",
+  "membership.suspend": "Suspended a membership",
+  "membership.cancel": "Cancelled a membership",
+  "reminder.send": "Sent a reminder",
+  "reminder.log": "Logged a reminder",
+  "invoice.create": "Created an invoice",
+  "invoice.void": "Voided an invoice",
+  "payment.record": "Recorded a payment",
+  "attendance.checkin": "Checked in a member",
+  "settings.gym_update": "Updated gym settings",
+  "settings.backup_create": "Created a backup",
+  "settings.backup_restore": "Restored from backup",
+  "dev.create_admin": "Created a dev admin account",
+  "dev.wipe_users": "Wiped all users",
+};
+
+export function describeAction(key: string): string {
+  return ACTION_DESCRIPTIONS[key] ?? key.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
