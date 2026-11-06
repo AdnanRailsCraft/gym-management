@@ -23,6 +23,7 @@ export interface MemberRow {
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
   status: MemberStatus;
+  client_type: "regular" | "pt";
   notes: string | null;
   referral_source: string | null;
   fitness_goals: string | null;
@@ -60,6 +61,7 @@ export interface MemberProfileInput {
   referralSource: string | null;
   fitnessGoals: string | null;
   marketingConsent: boolean;
+  clientType?: "regular" | "pt";
 }
 
 export interface MemberSummary extends MemberListRow {
@@ -97,7 +99,7 @@ export function getMember(db: Db, id: number): MemberRow | null {
 export function listMembers(db: Db, filter: MemberListFilter = {}): MemberListRow[] {
   let query = `SELECT id, member_number, full_name, phone, email, gender,
                       date_of_birth, address, emergency_contact_name,
-                      emergency_contact_phone, status, notes, referral_source,
+                      emergency_contact_phone, status, client_type, notes, referral_source,
                       fitness_goals, marketing_consent, joined_on, archived_at,
                       created_at, updated_at
                FROM members WHERE 1=1`;
@@ -225,9 +227,9 @@ export function createMember(
         `INSERT INTO members
            (member_number, full_name, phone, email, gender, date_of_birth,
             address, emergency_contact_name, emergency_contact_phone, status,
-            notes, referral_source, fitness_goals, marketing_consent,
+            client_type, notes, referral_source, fitness_goals, marketing_consent,
             joined_on, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         nextMemberNumber(db),
@@ -239,6 +241,7 @@ export function createMember(
         input.address,
         input.emergencyContactName,
         input.emergencyContactPhone,
+        input.clientType ?? "regular",
         input.notes,
         input.referralSource,
         input.fitnessGoals,
@@ -273,7 +276,7 @@ export function updateMember(
       `UPDATE members SET
          full_name = ?, phone = ?, email = ?, gender = ?, date_of_birth = ?,
          address = ?, emergency_contact_name = ?, emergency_contact_phone = ?,
-         notes = ?, referral_source = ?, fitness_goals = ?, marketing_consent = ?,
+         client_type = ?, notes = ?, referral_source = ?, fitness_goals = ?, marketing_consent = ?,
          updated_at = ?
        WHERE id = ?`,
     ).run(
@@ -285,6 +288,7 @@ export function updateMember(
       input.address,
       input.emergencyContactName,
       input.emergencyContactPhone,
+      input.clientType ?? before.client_type,
       input.notes,
       input.referralSource,
       input.fitnessGoals,

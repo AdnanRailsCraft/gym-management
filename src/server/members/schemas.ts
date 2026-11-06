@@ -73,6 +73,7 @@ export const memberProfileSchema = z
     referralSource: optionalText(120),
     fitnessGoals: optionalText(500),
     marketingConsent: checkboxField,
+    clientType: z.preprocess(emptyToUndefined, z.enum(["regular", "pt"]).optional()),
     id: z.preprocess(emptyToUndefined, z.coerce.number().int().positive().optional()),
   })
   .refine((value) => Boolean(value.phone) || Boolean(value.email), {

@@ -18,6 +18,7 @@ import { MemberDetailClient } from "./member-detail-client";
 import {
   IconWhatsApp,
   IconReceipt,
+  IconPrinter,
   IconPlus,
 } from "@/components/icons";
 
@@ -97,7 +98,7 @@ export default async function MemberDetailPage({
                       : "chip chip-ok"
                   }
                 >
-                  Status: {member.status}
+                  Status: {member.status} � {member.client_type === "pt" ? "PT Client" : "Regular"}
                 </span>
                 {member.membership ? (
                   <span
@@ -137,10 +138,16 @@ export default async function MemberDetailPage({
               </a>
             ) : null}
             {can(user, PERMISSIONS.paymentsRecord) ? (
+              <>
+              <Link className="btn-secondary btn-link" href={`/members/${member.id}/print`} target="_blank">
+                <IconPrinter size={14} />
+                <span>Print Profile</span>
+              </Link>
               <Link className="btn-secondary btn-link" href={`/invoices?memberId=${member.id}`}>
                 <IconReceipt size={14} />
                 <span>Create Invoice</span>
               </Link>
+              </>
             ) : null}
             {can(user, PERMISSIONS.attendanceRecord) ? (
               <Link className="btn-secondary btn-link" href="/attendance">

@@ -50,6 +50,7 @@ function fieldsFromForm(formData: FormData) {
     referralSource: formData.get("referralSource") ?? "",
     fitnessGoals: formData.get("fitnessGoals") ?? "",
     marketingConsent: formData.get("marketingConsent") ?? "",
+    clientType: formData.get("clientType") ?? "",
   };
 }
 
@@ -69,6 +70,7 @@ function toProfile(
     referralSource: emptyToNull(data.referralSource),
     fitnessGoals: emptyToNull(data.fitnessGoals),
     marketingConsent: data.marketingConsent,
+    clientType: data.clientType,
   };
 }
 
