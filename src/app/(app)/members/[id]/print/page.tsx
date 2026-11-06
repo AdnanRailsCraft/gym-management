@@ -33,29 +33,16 @@ export default async function PrintMemberPage({
   const money = (minor: number) => formatMinorUnits(minor, gym.currency_code, 2);
 
   return (
-    <html>
-      <head>
-        <title>Client Profile - {member.full_name}</title>
-        <style>{`
-          body { font-family: Arial, sans-serif; margin: 20px; color: #1a1a1a; }
-          h1 { font-size: 18px; margin: 0 0 4px; }
-          h2 { font-size: 14px; margin: 16px 0 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
-          .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #333; padding-bottom: 12px; }
-          .gym-name { font-size: 20px; font-weight: bold; }
-          .label { font-weight: 600; color: #555; font-size: 12px; text-transform: uppercase; }
-          .value { font-size: 14px; margin-bottom: 8px; }
-          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-          .membership-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-          .membership-table th, .membership-table td { border: 1px solid #ddd; padding: 6px 8px; font-size: 12px; text-align: left; }
-          .membership-table th { background: #f5f5f5; font-weight: 600; }
-          .footer { margin-top: 24px; font-size: 11px; color: #888; text-align: center; border-top: 1px solid #ccc; padding-top: 8px; }
-          @media print { body { margin: 10px; } }
-        `}</style>
-      </head>
-      <body>
-        <div className="header">
+    <div style={{ fontFamily: "Arial, sans-serif", margin: "20px", color: "#1a1a1a" }}>
+      <style>{`
+        @media print {
+          body > *:not(.print-content) { display: none !important; }
+        }
+      `}</style>
+      <div className="print-content">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "2px solid #333", paddingBottom: "12px" }}>
           <div>
-            <div className="gym-name">{gym.gym_name}</div>
+            <div style={{ fontSize: "20px", fontWeight: "bold" }}>{gym.gym_name}</div>
             <div style={{ fontSize: "12px", color: "#666" }}>{gym.address} · {gym.phone}</div>
           </div>
           <div style={{ textAlign: "right", fontSize: "12px", color: "#666" }}>
@@ -64,36 +51,36 @@ export default async function PrintMemberPage({
           </div>
         </div>
 
-        <h1>{member.full_name}</h1>
+        <h1 style={{ fontSize: "18px", margin: "0 0 4px" }}>{member.full_name}</h1>
         <div style={{ fontSize: "12px", color: "#666", marginBottom: "12px" }}>
           {member.member_number} · {member.client_type === "pt" ? "Personal Training" : "Regular Member"} · Status: {member.status}
         </div>
 
-        <h2>Contact Information</h2>
-        <div className="grid">
+        <h2 style={{ fontSize: "14px", margin: "16px 0 8px", borderBottom: "1px solid #ccc", paddingBottom: "4px" }}>Contact Information</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
           <div>
-            <div className="label">Phone</div>
-            <div className="value">{member.phone || "—"}</div>
+            <div style={{ fontWeight: 600, color: "#555", fontSize: "12px", textTransform: "uppercase" }}>Phone</div>
+            <div style={{ fontSize: "14px", marginBottom: "8px" }}>{member.phone || "—"}</div>
           </div>
           <div>
-            <div className="label">Email</div>
-            <div className="value">{member.email || "—"}</div>
+            <div style={{ fontWeight: 600, color: "#555", fontSize: "12px", textTransform: "uppercase" }}>Email</div>
+            <div style={{ fontSize: "14px", marginBottom: "8px" }}>{member.email || "—"}</div>
           </div>
           <div>
-            <div className="label">Gender</div>
-            <div className="value">{member.gender || "—"}</div>
+            <div style={{ fontWeight: 600, color: "#555", fontSize: "12px", textTransform: "uppercase" }}>Gender</div>
+            <div style={{ fontSize: "14px", marginBottom: "8px" }}>{member.gender || "—"}</div>
           </div>
           <div>
-            <div className="label">Date of Birth</div>
-            <div className="value">{member.date_of_birth || "—"}</div>
+            <div style={{ fontWeight: 600, color: "#555", fontSize: "12px", textTransform: "uppercase" }}>Date of Birth</div>
+            <div style={{ fontSize: "14px", marginBottom: "8px" }}>{member.date_of_birth || "—"}</div>
           </div>
           <div>
-            <div className="label">Address</div>
-            <div className="value">{member.address || "—"}</div>
+            <div style={{ fontWeight: 600, color: "#555", fontSize: "12px", textTransform: "uppercase" }}>Address</div>
+            <div style={{ fontSize: "14px", marginBottom: "8px" }}>{member.address || "—"}</div>
           </div>
           <div>
-            <div className="label">Emergency Contact</div>
-            <div className="value">
+            <div style={{ fontWeight: 600, color: "#555", fontSize: "12px", textTransform: "uppercase" }}>Emergency Contact</div>
+            <div style={{ fontSize: "14px", marginBottom: "8px" }}>
               {member.emergency_contact_name || "—"}
               {member.emergency_contact_phone ? ` (${member.emergency_contact_phone})` : ""}
             </div>
@@ -102,50 +89,50 @@ export default async function PrintMemberPage({
 
         {member.fitness_goals ? (
           <>
-            <h2>Fitness Goals</h2>
-            <div className="value">{member.fitness_goals}</div>
+            <h2 style={{ fontSize: "14px", margin: "16px 0 8px", borderBottom: "1px solid #ccc", paddingBottom: "4px" }}>Fitness Goals</h2>
+            <div style={{ fontSize: "14px", marginBottom: "8px" }}>{member.fitness_goals}</div>
           </>
         ) : null}
 
         {health?.notes ? (
           <>
-            <h2>Health Notes</h2>
-            <div className="value">{health.notes}</div>
+            <h2 style={{ fontSize: "14px", margin: "16px 0 8px", borderBottom: "1px solid #ccc", paddingBottom: "4px" }}>Health Notes</h2>
+            <div style={{ fontSize: "14px", marginBottom: "8px" }}>{health.notes}</div>
           </>
         ) : null}
 
-        <h2>Membership History</h2>
+        <h2 style={{ fontSize: "14px", margin: "16px 0 8px", borderBottom: "1px solid #ccc", paddingBottom: "4px" }}>Membership History</h2>
         {memberships.length === 0 ? (
-          <p className="muted">No memberships recorded.</p>
+          <p style={{ color: "#666" }}>No memberships recorded.</p>
         ) : (
-          <table className="membership-table">
+          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "8px" }}>
             <thead>
               <tr>
-                <th>Plan</th>
-                <th>Start</th>
-                <th>End</th>
-                <th>State</th>
-                <th>Amount Paid</th>
+                <th style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px", textAlign: "left", background: "#f5f5f5", fontWeight: 600 }}>Plan</th>
+                <th style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px", textAlign: "left", background: "#f5f5f5", fontWeight: 600 }}>Start</th>
+                <th style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px", textAlign: "left", background: "#f5f5f5", fontWeight: 600 }}>End</th>
+                <th style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px", textAlign: "left", background: "#f5f5f5", fontWeight: 600 }}>State</th>
+                <th style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px", textAlign: "left", background: "#f5f5f5", fontWeight: 600 }}>Amount Paid</th>
               </tr>
             </thead>
             <tbody>
               {memberships.map((m) => (
                 <tr key={m.id}>
-                  <td>{m.planName}</td>
-                  <td>{m.start_on}</td>
-                  <td>{m.end_on}</td>
-                  <td>{m.state}</td>
-                  <td>{money(m.price_minor)}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px" }}>{m.planName}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px" }}>{m.start_on}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px" }}>{m.end_on}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px" }}>{m.state}</td>
+                  <td style={{ border: "1px solid #ddd", padding: "6px 8px", fontSize: "12px" }}>{money(m.price_minor)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
 
-        <div className="footer">
+        <div style={{ marginTop: "24px", fontSize: "11px", color: "#888", textAlign: "center", borderTop: "1px solid #ccc", paddingTop: "8px" }}>
           {gym.receipt_footer || `Thank you for training with ${gym.gym_name}!`}
         </div>
-      </body>
-    </html>
+      </div>
+    </div>
   );
 }
