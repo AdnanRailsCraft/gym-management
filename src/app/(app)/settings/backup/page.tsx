@@ -1,7 +1,7 @@
 import { requireUser } from "@/server/auth/current-user";
 import { can } from "@/server/policies/authorize";
 import { PERMISSIONS } from "@/server/policies/permissions";
-import { listBackups } from "@/server/backup/service";
+import { listBackups, getBackupFolder, isAutoBackupEnabled, getBackupRetentionCount, getLastBackupAt } from "@/server/backup/service";
 import { BackupClient } from "./backup-client";
 
 export default async function BackupPage() {
@@ -10,6 +10,10 @@ export default async function BackupPage() {
     return <div className="page-wide"><p>You don't have permission to access backups.</p></div>;
   }
   const backups = listBackups();
+  const backupFolder = getBackupFolder();
+  const autoBackup = isAutoBackupEnabled();
+  const retention = getBackupRetentionCount();
+  const lastBackup = getLastBackupAt();
   return (
     <div className="page-wide">
       <div className="page-header">
@@ -20,7 +24,13 @@ export default async function BackupPage() {
           </p>
         </div>
       </div>
-      <BackupClient backups={backups} />
+      <BackupClient
+        backups={backups}
+        backupFolder={backupFolder}
+        autoBackup={autoBackup}
+        retention={retention}
+        lastBackup={lastBackup}
+      />
     </div>
   );
 }

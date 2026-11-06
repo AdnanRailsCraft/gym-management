@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createBackupAction, restoreBackupAction } from "./actions";
+import { createBackupAction, restoreBackupAction, updateBackupSettingsAction } from "./actions";
 import { IconCheckCircle, IconAlertTriangle } from "@/components/icons";
 
 interface BackupInfo {
@@ -11,12 +11,29 @@ interface BackupInfo {
   createdAt: string;
 }
 
-export function BackupClient({ backups: initialBackups }: { backups: BackupInfo[] }) {
+export function BackupClient({
+  backups: initialBackups,
+  backupFolder,
+  autoBackup,
+  retention,
+  lastBackup,
+}: {
+  backups: BackupInfo[];
+  backupFolder: string;
+  autoBackup: boolean;
+  retention: number;
+  lastBackup: string | null;
+}) {
   const [backups] = useState(initialBackups);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [confirmRestore, setConfirmRestore] = useState<string | null>(null);
+
+  // Settings form state
+  const [folder, setFolder] = useState(backupFolder);
+  const [auto, setAuto] = useState(autoBackup);
+  const [ret, setRet] = useState(retention);
 
   const handleCreateBackup = () => {
     setMessage(null);
@@ -25,7 +42,6 @@ export function BackupClient({ backups: initialBackups }: { backups: BackupInfo[
       const res = await createBackupAction();
       if (res.ok) {
         setMessage(res.message ?? "Backup created successfully.");
-        // Refresh list
         window.location.reload();
       } else {
         setError(res.error ?? "Backup failed.");
@@ -44,6 +60,21 @@ export function BackupClient({ backups: initialBackups }: { backups: BackupInfo[
         window.location.reload();
       } else {
         setError(res.error ?? "Restore failed.");
+      }
+    });
+  };
+
+  const handleSaveSettings = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setMessage(null);
+    setError(null);
+    const formData = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const res = await updateBackupSettingsAction(formData);
+      if (res.ok) {
+        setMessage(res.message ?? "Settings saved.");
+      } else {
+        setError(res.error ?? "Failed to save settings.");
       }
     });
   };
@@ -69,10 +100,64 @@ export function BackupClient({ backups: initialBackups }: { backups: BackupInfo[
         </div>
       ) : null}
 
+      {/* Backup Settings */}
       <div className="card" style={{ marginBottom: "24px" }}>
-        <h3 style={{ margin: "0 0 8px" }}>Create Backup</h3>
+        <h3 style={{ margin: "0 0 8px" }}>Backup Settings</h3>
         <p className="muted small" style={{ margin: "0 0 16px" }}>
-          Creates a copy of your database in the backups folder. Do this regularly — especially before updates.
+          Save backups to a cloud-synced folder (Google Drive, OneDrive, Dropbox) for off-site protection.
+          Leave empty to use the default local backups folder.
+        </p>
+        <form onSubmit={handleSaveSettings} className="form">
+          <div className="field">
+            <label htmlFor="backupFolder">Backup Folder Path</label>
+            <input
+              id="backupFolder"
+              name="backupFolder"
+              value={folder}
+              onChange={(e) => setFolder(e.target.value)}
+              placeholder="e.g. C:\Users\You\Google Drive\GymBackups"
+            />
+            <p className="muted small" style={{ margin: "4px 0 0" }}>
+              Tip: Install Google Drive or OneDrive desktop app, then paste the synced folder path here.
+            </p>
+          </div>
+          <div className="field" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <input
+              type="checkbox"
+              id="autoBackup"
+              name="autoBackup"
+              checked={auto}
+              onChange={(e) => setAuto(e.target.checked)}
+            />
+            <label htmlFor="autoBackup" style={{ margin: 0 }}>Auto-backup on startup</label>
+          </div>
+          <div className="field">
+            <label htmlFor="retention">Keep last N backups</label>
+            <input
+              id="retention"
+              name="retention"
+              type="number"
+              min={1}
+              max={30}
+              value={ret}
+              onChange={(e) => setRet(parseInt(e.target.value, 10) || 7)}
+            />
+          </div>
+          {lastBackup ? (
+            <p className="muted small" style={{ margin: "0 0 12px" }}>
+              Last backup: {new Date(lastBackup).toLocaleString()}
+            </p>
+          ) : null}
+          <button type="submit" className="btn-secondary" disabled={isPending}>
+            {isPending ? "Saving..." : "Save Settings"}
+          </button>
+        </form>
+      </div>
+
+      <div className="card" style={{ marginBottom: "24px" }}>
+        <h3 style={{ margin: "0 0 8px" }}>Create Backup Now</h3>
+        <p className="muted small" style={{ margin: "0 0 16px" }}>
+          Creates a copy of your database. Saved to the folder configured above.
         </p>
         <button type="button" className="btn-primary" onClick={handleCreateBackup} disabled={isPending}>
           {isPending ? "Creating backup..." : "Back Up Now"}

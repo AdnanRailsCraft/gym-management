@@ -15,6 +15,16 @@ export async function register() {
     if (result.applied.length > 0) {
       console.warn(`[gms] migrations applied: ${result.applied.join(", ")}`);
     }
+
+    // Auto-backup on startup if enabled
+    const { getDb } = await import("./server/db/connection");
+    const db = getDb();
+    const autoBackup = db.prepare("SELECT value FROM app_settings WHERE key = 'auto_backup_enabled'").get() as { value: string } | undefined;
+    if (autoBackup?.value === "1") {
+      const { createBackup } = await import("./server/backup/service");
+      const backupPath = await createBackup("auto");
+      console.warn(`[gms] auto-backup created: ${backupPath}`);
+    }
   } catch (err) {
     // Fail closed: never serve requests against an unknown schema.
     console.error("[gms] migration failed", err);
